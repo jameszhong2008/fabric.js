@@ -17074,6 +17074,27 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
      */
     activeOn:           'down',
 
+
+    /**
+     * Disable fill property
+     */
+    disableFill: false,
+
+    /**
+     * Disable stroke property
+     */
+    disableStroke: false,
+
+    /**
+     * Disable shadow property
+     */
+    disableShadow: false,
+
+    /**
+     * Disable opacity property
+     */
+    disableOpacity: false,
+
     /**
      * List of properties to consider when checking if state
      * of an object is changed (fabric.Object#hasStateChanged)

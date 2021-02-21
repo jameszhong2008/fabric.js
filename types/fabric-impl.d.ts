@@ -3132,6 +3132,26 @@ interface IObjectOptions {
      * The canvas the object belongs to
      */
     canvas?: Canvas;
+
+    /**
+     * Disable fill property
+     */
+    disableFill: false;
+
+    /**
+     * Disable stroke property
+     */
+    disableStroke: false;
+
+    /**
+     * Disable shadow property
+     */
+    disableShadow: false;
+
+    /**
+     * Disable opacity property
+     */
+    disableOpacity: false;
 }
 export interface Object extends IObservable<Object>, IObjectOptions, IObjectAnimation<Object> {}
 export class Object {
