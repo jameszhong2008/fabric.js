@@ -27,7 +27,7 @@ import {
 } from '../../util/misc/textStyles';
 import { getPathSegmentsInfo, getPointOnPath } from '../../util/path';
 import { cacheProperties } from '../Object/FabricObject';
-import type { Path } from '../Path';
+import { Path } from '../Path';
 import { TextSVGExportMixin } from './TextSVGExportMixin';
 import { applyMixins } from '../../util/applyMixins';
 import type { FabricObjectProps, SerializedObjectProps } from '../Object/types';
@@ -46,6 +46,7 @@ import { isFiller } from '../../util/typeAssertions';
 import type { Gradient } from '../../gradient/Gradient';
 import type { Pattern } from '../../Pattern';
 import type { CSSRules } from '../../parser/typedefs';
+import { controlsUtils, ITextProps, Textbox } from 'fabric/node';
 
 let measuringContext: CanvasRenderingContext2D | null;
 
@@ -89,6 +90,8 @@ export type GraphemeBBox = {
   renderLeft?: number;
   renderTop?: number;
   angle?: number;
+  // James modified
+  visible?: boolean;
 };
 
 // @TODO this is not complete
@@ -416,6 +419,25 @@ export class FabricText<
 
   static ownDefaults = textDefaultValues;
 
+  /**
+   * James add
+   * Indicates whether text is in editing mode
+   * @type Boolean
+   * @default
+   */
+  declare isEditing: boolean;
+  /**
+   * James add
+   * 是否有隐藏文字
+   */
+  declare hasHideText: boolean;
+
+  /**
+   * James add
+   * 是否启用计算文字高度
+   */
+  static enableCalcTextHeight: boolean;
+
   static type = 'Text';
 
   static getDefaults(): Record<string, any> {
@@ -446,6 +468,12 @@ export class FabricText<
     const path = this.path;
     if (path) {
       path.segmentsInfo = getPathSegmentsInfo(path.path);
+
+    // James modified 检查空路径的话，设置path为空
+    if (!path.width && !path.height) {
+      console.log(this, "text path empty");
+      this.path = undefined;
+    }
     }
   }
 
@@ -735,7 +763,8 @@ export class FabricText<
         // at this point charbox are either standard or full with pathInfo if there is a path.
         const charBox = this.__charBounds[i][j] as Required<GraphemeBBox>;
         currentColor = this.getValueOfPropertyAt(i, j, 'textBackgroundColor');
-        if (this.path) {
+        // James modified
+      if (this.path && !this.isEditing) {
           ctx.save();
           ctx.translate(charBox.renderLeft, charBox.renderTop);
           ctx.rotate(charBox.angle);
@@ -939,15 +968,29 @@ export class FabricText<
         reverse ? i-- : i++
       ) {
         graphemeInfo = lineBounds[i];
-        if (positionInPath > totalPathLength) {
+
+        // James modified
+        /* if (positionInPath > totalPathLength) {
           positionInPath %= totalPathLength;
         } else if (positionInPath < 0) {
           positionInPath += totalPathLength;
+        } */
+        // 超过路径范围外不显示
+        var visible = false;
+        var tolerance = 2;
+        if (
+          positionInPath >= 0 - tolerance &&
+          positionInPath + graphemeInfo.kernedWidth <= totalPathLength + tolerance
+        ) {
+          visible = true;
         }
-        // it would probably much faster to send all the grapheme position for a line
-        // and calculate path position/angle at once.
-        this._setGraphemeOnPath(positionInPath, graphemeInfo);
+        if (visible) {
+          // it would probably much faster to send all the grapheme position for a line
+          // and calculate path position/angle at once.
+          this._setGraphemeOnPath(positionInPath, graphemeInfo);
+        }
         positionInPath += graphemeInfo.kernedWidth;
+        graphemeInfo.visible = visible;
       }
     }
     return { width: width, numOfSpaces: 0 };
@@ -1068,6 +1111,17 @@ export class FabricText<
   }
 
   /**
+   * James add
+   * 是否应该按行隐藏文字
+   * @returns 
+   */
+  _shouldHideTextLine() {
+    return !this.isEditing && !this.path;
+  }
+
+  /**
+   * James modified
+   * 框子外的文字不绘制
    * @private
    * @param {CanvasRenderingContext2D} ctx Context to render on
    * @param {String} method Method name ("fillText" or "strokeText")
@@ -1080,10 +1134,23 @@ export class FabricText<
     let lineHeights = 0;
     const left = this._getLeftOffset(),
       top = this._getTopOffset();
+
+    // 存在隐藏文字
+    this.hasHideText = false;
     for (let i = 0, len = this._textLines.length; i < len; i++) {
       const heightOfLine = this.getHeightOfLine(i),
         maxHeight = heightOfLine / this.lineHeight,
         leftOffset = this._getLineLeftOffset(i);
+
+    // 非编辑状态超过box 不显示
+    if (
+      this._shouldHideTextLine() &&
+      lineHeights + maxHeight * 0.8 > this.height
+    ) {
+      this.hasHideText = true;
+      break;
+    }
+
       this._renderTextLine(
         method,
         ctx,
@@ -1096,6 +1163,47 @@ export class FabricText<
     }
     ctx.restore();
   }
+
+  /**
+   * James add
+   * 增加隐藏文字图标
+   */
+  showHideTextIcon() {
+    const control = this.controls?.["mb"];
+    if (control) {
+      control.render = (ctx, left, top, styleOverride, fabricObject) => {
+        styleOverride = styleOverride || {};
+        if (this.hasHideText) {
+          styleOverride = {
+            ...styleOverride,
+            cornerStrokeColor: "#FF0000",
+            cornerSize: 10,
+          };
+        }
+        switch (styleOverride.cornerStyle || fabricObject.cornerStyle) {
+          case "circle":
+            controlsUtils.renderCircleControl.call(
+              control,
+              ctx,
+              left,
+              top,
+              styleOverride,
+              fabricObject
+            );
+            break;
+          default:
+            controlsUtils.renderSquareControl.call(
+              control,
+              ctx,
+              left,
+              top,
+              styleOverride,
+              fabricObject
+            );
+        }
+      };
+    }
+  }  
 
   /**
    * @private
@@ -1157,6 +1265,8 @@ export class FabricText<
         !path,
       isLtr = this.direction === 'ltr',
       sign = this.direction === 'ltr' ? 1 : -1,
+      // James modified
+      // 修改为之前绘制 direction rtl的方式，5.3.0版本的绘制方式显示有问题
       // this was changed in the PR #7674
       // currentDirection = ctx.canvas.getAttribute('dir');
       currentDirection = ctx.direction;
@@ -1172,6 +1282,7 @@ export class FabricText<
     ctx.save();
     if (currentDirection !== this.direction) {
       ctx.canvas.setAttribute('dir', isLtr ? 'ltr' : 'rtl');
+      // James modified
       ctx.direction = isLtr ? 'ltr' : 'rtl';
       ctx.textAlign = isLtr ? LEFT : RIGHT;
     }
@@ -1179,6 +1290,7 @@ export class FabricText<
     if (shortCut) {
       // render all the line in one pass without checking
       // drawingLeft = isLtr ? left : left - this.getLineWidth(lineIndex);
+      // James modified
       this._renderChar(method, ctx, lineIndex, 0, line.join(''), left, top);
       ctx.restore();
       return;
@@ -1206,20 +1318,23 @@ export class FabricText<
         timeToRender = hasStyleChanged(actualStyle, nextStyle, false);
       }
       if (timeToRender) {
-        if (path) {
-          ctx.save();
-          ctx.translate(charBox.renderLeft, charBox.renderTop);
-          ctx.rotate(charBox.angle);
-          this._renderChar(
-            method,
-            ctx,
-            lineIndex,
-            i,
-            charsToRender,
-            -boxWidth / 2,
-            0,
-          );
-          ctx.restore();
+        // James modified
+        if (path && !this.isEditing) {
+          if (charBox.visible) {
+            ctx.save();
+            ctx.translate(charBox.renderLeft, charBox.renderTop);
+            ctx.rotate(charBox.angle);
+            this._renderChar(
+              method,
+              ctx,
+              lineIndex,
+              i,
+              charsToRender,
+              -boxWidth / 2,
+              0
+            );
+            ctx.restore();
+          }
         } else {
           drawingLeft = left;
           this._renderChar(
@@ -1229,7 +1344,7 @@ export class FabricText<
             i,
             charsToRender,
             drawingLeft,
-            top,
+            top
           );
         }
         charsToRender = '';
@@ -1727,6 +1842,8 @@ export class FabricText<
    * @returns  Lines in the text
    */
   _splitTextIntoLines(text: string): TextLinesInfo {
+    // James modified 生成换行数据， 如果是path则不进行换行(删除换行字符)
+    text = this.path ? text.replaceAll(/\r?\n/g, "") : text;
     const lines = text.split(this._reNewline),
       newLines = new Array<string[]>(lines.length),
       newLine = ['\n'];
@@ -1849,67 +1966,396 @@ export class FabricText<
     options: Abortable,
     cssRules?: CSSRules,
   ) {
-    const parsedAttributes = parseAttributes(
+    if (!element) {
+      return null;
+    }
+  
+    var parsedAttributes = parseAttributes(
       element,
       FabricText.ATTRIBUTE_NAMES,
-      cssRules,
-    );
+      cssRules
+    )
+    const textOptions = {
+      ...(cssRules ? JSON.parse(JSON.stringify(cssRules)) : {}),
+      ...parsedAttributes,
+    };
+    // 处理style中字体样式带单引号问题
+    let reg = /^'(.*)'$/;
+    if (reg.test(textOptions.fontFamily)) {
+      textOptions.fontFamily = textOptions.fontFamily.slice(1, -1);
+    }
+  
+    textOptions.top = textOptions.top || 0;
+    textOptions.left = textOptions.left || 0;
+    if (parsedAttributes.textDecoration) {
+      var textDecoration = parsedAttributes.textDecoration;
+      if (textDecoration.indexOf("underline") !== -1) {
+        textOptions.underline = true;
+      }
+      if (textDecoration.indexOf("overline") !== -1) {
+        textOptions.overline = true;
+      }
+      if (textDecoration.indexOf("line-through") !== -1) {
+        textOptions.linethrough = true;
+      }
+      delete textOptions.textDecoration;
+    }
+    if ("dx" in parsedAttributes) {
+      textOptions.left += parsedAttributes.dx;
+    }
+    if ("dy" in parsedAttributes) {
+      textOptions.top += parsedAttributes.dy;
+    }
+    if (!("fontSize" in options)) {
+      textOptions.fontSize = DEFAULT_SVG_FONT_SIZE;
+    }
+  
+    let text: Textbox;
+    const paths = element.getElementsByTagName("textPath");
+    if (paths.length) {
+      text = this._fromTextPath(paths[0], textOptions, parsedAttributes);
+    } else {
+      text = this._fromTextSpan(element, textOptions, parsedAttributes);
+    }
+    return text;
+  }
 
-    const {
-      textAnchor = LEFT as typeof LEFT | typeof CENTER | typeof RIGHT,
-      textDecoration = '',
-      dx = 0,
-      dy = 0,
-      top = 0,
-      left = 0,
-      fontSize = DEFAULT_SVG_FONT_SIZE,
-      strokeWidth = 1,
-      ...restOfOptions
-    } = { ...options, ...parsedAttributes };
-
-    const textContent = (element.textContent || '')
-      .replace(/^\s+|\s+$|\n+/g, '')
-      .replace(/\s+/g, ' ');
-
-    // this code here is probably the usual issue for SVG center find
-    // this can later looked at again and probably removed.
-
-    const text = new this(textContent, {
-        left: left + dx,
-        top: top + dy,
-        underline: textDecoration.includes('underline'),
-        overline: textDecoration.includes('overline'),
-        linethrough: textDecoration.includes('line-through'),
-        // we initialize this as 0
-        strokeWidth: 0,
-        fontSize,
-        ...restOfOptions,
-      }),
+  static _findSvgTextPath (element: any, id: string) {
+    const svg = element.closest("svg");
+    return svg.querySelector(id);
+  };
+  
+  static _fromTextPath = (
+    textPath: any,
+    options: any,
+    parsedAttributes: { [key: string]: string }
+  ) => {
+    var parsedAnchor = parsedAttributes.textAnchor || "left";
+  
+    var textPathParsedAttributes = parseAttributes(textPath, [
+      "href",
+      "text-anchor",
+      "startOffset",
+    ]);
+    if (textPathParsedAttributes.textAnchor) {
+      parsedAnchor = textPathParsedAttributes.textAnchor;
+    }
+    if (parsedAnchor === "middle") {
+      parsedAnchor = "center";
+    } else if (parsedAnchor === "end") {
+      parsedAnchor = "right";
+    }
+    options.textAlign = parsedAnchor;
+  
+    var textContent = textPath.textContent;
+    var text = new Textbox(textContent, options);
+  
+    const href = textPathParsedAttributes.href;
+    if (href && href.startsWith("#")) {
+      const pathElement = FabricText._findSvgTextPath(textPath, href);
+      if (pathElement) {
+        var pathParsedAttributes = parseAttributes(
+          pathElement,
+          Path.ATTRIBUTE_NAMES
+        );
+        const path = new Path(pathParsedAttributes.d, {
+          ...pathParsedAttributes,
+          ...{
+            strokeWidth: 1,
+            stroke: "#ff0000",
+            fill: null as any,
+            visible: false,
+          },
+        });
+        // 需要计算实际字体大小
+        FabricText.enableCalcTextHeight = true;
+        const textHeight = new Textbox("i", {
+          fontFamily: options.fontFamily,
+          fontSize: options.fontSize,
+          fontStyle: options.fontStyle,
+          fontWeight: options.fontWeight,
+          width: undefined,
+          height: undefined,
+        }).height || 20;
+        text.set({
+          width: (path.width || 0) + textHeight * 2,
+          height: (path.height || 0) + textHeight * 2,
+          path,
+          pathType: "custom",
+        } as any);
+        // 取消自动计算文字高度
+        FabricText.enableCalcTextHeight = false;
+      }
+    }
+    // 设置位置中心点为左上角
+    text.set({
+      left: options.left - (text.width || 0) / 2,
+      top: options.top - (text.height || 0) / 2,
+    });
+    return text;
+  };
+  
+  static _fromTextSpan(
+    element: any,
+    options: any,
+    parsedAttributes: { [key: string]: string }
+  ) {
+    var textContent = "";
+    var parsedAnchor = parsedAttributes.textAnchor || "left";
+    // 是否需要根据tspan位置计算对齐
+    let calcHorAlign = !parsedAttributes.textAnchor;
+    let calcAdjustHorAlign = "";
+  
+    // The XML is not properly parsed in IE9 so a workaround to get
+    // textContent is through firstChild.data. Another workaround would be
+    // to convert XML loaded from a file to be converted using DOMParser (same way loadSVGFromString() does)
+  
+    let lineCnt = 1;
+    let alignmentBaseline = "auto";
+    let spanOffX = 0,
+      minSpanX: number | null = null,
+      spanOffY = 0;
+  
+    if (element.hasAttribute("line-height")) {
+      options.lineHeight = parseFloat(element.getAttribute("line-height"));
+    } else if (options["line-height"]) {
+      // 从style 转换过来
+      options.lineHeight = parseFloat(options["line-height"]) / 100;
+    } else {
+      options.lineHeight = 1;
+    }
+  
+    if (!("textContent" in element)) {
+      if ("firstChild" in element && element.firstChild !== null) {
+        if ("data" in element.firstChild && element.firstChild.data !== null) {
+          textContent = element.firstChild.data;
+        }
+      }
+    } else {
+      textContent = element.textContent;
+      let spans = element.getElementsByTagName("tspan");
+      if (spans.length > 0) {
+        // 多行文字
+        let lines: {
+            text: string;
+            left: number;
+            width?: number;
+            right?: number;
+          }[] = [],
+          lineText = "",
+          curLineLeft = 0, // 本行的 水平方向位置
+          preSpanTop = 0, // 前一个tspan的 垂直方向位置
+          sumDx = 0,
+          sumDy = 0;
+        for (let i = 0; i < spans.length; i++) {
+          var parsedSpanAttributes = parseAttributes(
+            spans[i],
+            FabricText.ATTRIBUTE_NAMES
+          );
+  
+          sumDx += Number(parsedSpanAttributes.dx) || 0;
+          sumDy += Number(parsedSpanAttributes.dy) || 0;
+          // 在使用tspan判断对齐时spanX取最小的值
+          if ("left" in parsedSpanAttributes) {
+            let spanX = parseFloat(parsedSpanAttributes.left);
+            minSpanX = minSpanX != null ? Math.min(minSpanX, spanX) : spanX;
+          }
+          // 现在多个tspan用多行文字, 所以对齐和位置只处理第一个 tspan
+          if (i === 0) {
+            if (spans[i].hasAttribute("text-anchor")) {
+              // 水平方向
+              let anchor = spans[i].getAttribute("text-anchor");
+              // left | center | right
+              // start | middle | end
+              if (anchor === "middle") {
+                parsedAnchor = "center";
+              } else if (anchor === "end") {
+                parsedAnchor = "right";
+              }
+              calcHorAlign = false;
+            }
+            if (spans[i].hasAttribute("alignment-baseline")) {
+              // 垂直方向
+              alignmentBaseline = spans[i].getAttribute("alignment-baseline");
+            }
+  
+            // 处理tspan设置的位置和偏移
+            // top只处理第一行
+            if ("top" in parsedSpanAttributes) {
+              let spanY = parseFloat(parsedSpanAttributes.top);
+              spanY += sumDy;
+  
+              spanOffY = options.top - spanY;
+            }
+          }
+  
+          // 多个tspan可能在一行 根据 y position判断是否换行
+          // 另外没有对齐方式的，计算判断对齐方式，根据left的值判断对齐方式
+          (parsedSpanAttributes as any).left =
+            Number(parsedSpanAttributes.left || 0) + sumDx;
+          (parsedSpanAttributes as any).top =
+            Number(parsedSpanAttributes.top || 0) + sumDy;
+  
+          if (i === 0 || preSpanTop === (parsedSpanAttributes as any).top) {
+            lineText += spans[i].textContent;
+            if (i === 0) {
+              curLineLeft = Number((parsedSpanAttributes as any).left || 0);
+            }
+          } else {
+            lines.push({ text: lineText, left: curLineLeft });
+            lineText = spans[i].textContent;
+            curLineLeft = Number((parsedSpanAttributes as any).left || 0);
+          }
+  
+          // 记住上一个span的Y位置
+          preSpanTop = (parsedSpanAttributes as any).top;
+        }
+        // 加上最后一行
+        if (lineText.length) {
+          lines.push({ text: lineText, left: curLineLeft });
+        }
+        // 加上换行符号
+        textContent = lines.map((v) => v.text).join("\n");
+        lineCnt = lines.length;
+  
+        if (calcHorAlign) {
+          if (lines.some((v) => v.left !== curLineLeft)) {
+            // 取最left的最小值,和right最大值
+            let minLeft = lines[0].left,
+              maxRight = lines[0].left,
+              maxWidth = 0,
+              minCenter: number | null = null,
+              maxCenter: number | null = null,
+              maxChar = 0,
+              maxCharIdx = 0;
+  
+            lines.forEach((v, idx) => {
+              minLeft = Math.min(minLeft, v.left);
+              v.width = (
+                new Textbox(v.text, options) as any
+              ).calcTextWidth();
+              v.right = v.left + (v.width || 0);
+              maxRight = Math.max(maxRight, v.right);
+              maxWidth = Math.max(maxWidth, v.width || 0);
+              if (v.width) {
+                const center = v.left + (v.width || 0) / 2;
+                minCenter = minCenter ? Math.min(minCenter, center) : center;
+                maxCenter = maxCenter ? Math.max(maxCenter, center) : center;
+  
+                if (v.text.length > maxChar) {
+                  maxChar = v.text.length;
+                  maxCharIdx = idx;
+                }
+              }
+            });
+            let leftGap = 0,
+              rightGap = 0;
+            lines.forEach((v) => {
+              leftGap = Math.max(leftGap, (v.left || 0) - minLeft);
+              rightGap = Math.max(rightGap, maxRight - (v.right || 0));
+            });
+            // 计算中心点位置
+            if (maxCenter && minCenter) {
+              const centerOff = maxCenter - minCenter;
+              const onCharWidth =
+                (lines[maxCharIdx].width || 0) / lines[maxCharIdx].text.length;
+              // 左边间距大于右边两倍 或者 中心点偏移超过1/2字符且右边间距小于1/3字符
+              if (
+                leftGap / (rightGap || 1) > 2 &&
+                centerOff > onCharWidth / 2 &&
+                rightGap < onCharWidth / 3
+              ) {
+                calcAdjustHorAlign = "right";
+              } else if (centerOff < onCharWidth / 2) {
+                calcAdjustHorAlign = "center";
+              }
+            }
+          }
+        }
+      }
+    }
+  
+    // 处理文字的水平偏移
+    spanOffX = options.left - (minSpanX || 0);
+  
+    // textAlign保持和parsedAnchor一致
+    options.textAlign = parsedAnchor;
+  
+    // 注释掉原来删除换行等符号的代码
+    //textContent = textContent.replace(/^\s+|\s+$|\n+/g, '').replace(/\s+/g, ' ');
+    var originalStrokeWidth = options.strokeWidth;
+    options.strokeWidth = 0;
+  
+    // 导入时打开自动计算文字高度，否则文字高度和 Y 轴位置错误
+    FabricText.enableCalcTextHeight = true;
+    var text = new Textbox(textContent, options) as any,
+      textOneLineHeight = text.height / lineCnt,
       textHeightScaleFactor = text.getScaledHeight() / text.height,
       lineHeightDiff =
-        (text.height + text.strokeWidth) * text.lineHeight - text.height,
+        (textOneLineHeight + text.strokeWidth) * text.lineHeight -
+        textOneLineHeight,
       scaledDiff = lineHeightDiff * textHeightScaleFactor,
-      textHeight = text.getScaledHeight() + scaledDiff;
-
-    let offX = 0;
+      textHeight = text.getScaledHeight() / lineCnt + scaledDiff,
+      offX = 0,
+      offY = 0;
+  
+    // 默认 alignment-baseline="before-edge" offY = 0
+    let offScale = 0;
+    if (alignmentBaseline === "before-edge") {
+      // 这个是1.0 导出的偏移值，多行且间距设置大于1也会有变化
+      // 暂时这么处理， 以后再解决
+      offScale = 1.1;
+    } else if (alignmentBaseline === "auto") {
+      // alignment-baseline="auto" 或者 没有设置
+      offScale = 0.02913333333;
+    }
+  
+    if (offScale !== 0) {
+      offY =
+        (textHeight - text.fontSize * (offScale + text._fontSizeFraction)) /
+        text.lineHeight;
+    }
+  
+    // 取消自动计算文字高度
+    FabricText.enableCalcTextHeight = false;
     /*
       Adjust positioning:
         x/y attributes in SVG correspond to the bottom-left corner of text bounding box
         fabric output by default at top, left.
     */
-    if (textAnchor === CENTER) {
-      offX = text.getScaledWidth() / 2;
+    const adjustOption: Partial<ITextProps> = {};
+    // 源码中options.width总是等于svg的宽度, 之前是new Text不能编辑文字，宽度设置为svg宽度也无效
+    // 修改为 new fabric.Textbox，并且设置为计算的正确宽度
+    const originWidth = options.width;
+    let width = text.calcTextWidth();
+    // 有时候计算出来的大小是不对的， 可能是字体的原因， 导致TextBox自动换行了, 所以加i字符的宽度
+    const oneIWidth = (new Textbox("i", options) as any).calcTextWidth();
+    width += oneIWidth;
+  
+    if (originWidth !== width) {
+      adjustOption.width = width;
     }
-    if (textAnchor === RIGHT) {
-      offX = text.getScaledWidth();
+    if (calcAdjustHorAlign) {
+      // tspan 按字符分开计算的对齐
+      adjustOption.textAlign = calcAdjustHorAlign;
     }
+  
+    // 2021.1.29修改
+    // Vectr1.0导出的svg，需要处理水平居中或右对齐偏移
+    // Vectr2.0导出的是按照span位置判断的对齐不需要处理整个width的位置偏移， 但是需要处理 oneIWidth的位置偏移
+    const textAlign = calcAdjustHorAlign || parsedAnchor;
+    if (textAlign === "center") {
+      offX = (parsedAnchor === "center" ? width : oneIWidth) / 2;
+    } else if (textAlign === "right") {
+      offX = parsedAnchor === "right" ? width : oneIWidth;
+    }
+  
     text.set({
-      left: text.left - offX,
-      top:
-        text.top -
-        (textHeight - text.fontSize * (0.07 + text._fontSizeFraction)) /
-          text.lineHeight,
-      strokeWidth,
+      ...adjustOption,
+      left: text.left - offX - spanOffX,
+      top: text.top - offY - spanOffY,
+      strokeWidth:
+        typeof originalStrokeWidth !== "undefined" ? originalStrokeWidth : 1,
     });
     return text;
   }

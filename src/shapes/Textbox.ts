@@ -6,8 +6,10 @@ import { JUSTIFY } from './Text/constants';
 import type { TextStyleDeclaration } from './Text/StyledText';
 import type { SerializedITextProps, ITextProps } from './IText/IText';
 import type { ITextEvents } from './IText/ITextBehavior';
-import type { TextLinesInfo } from './Text/Text';
+import type { FabricText, SerializedTextProps, TextLinesInfo } from './Text/Text';
 import type { Control } from '../controls/Control';
+import { stylesFromArray } from '../util';
+import { FabricObject } from 'fabric/node';
 
 // @TODO: Many things here are configuration related and shouldn't be on the class nor prototype
 // regexes, list of properties that are not suppose to change by instances, magic consts.
@@ -95,6 +97,9 @@ export class Textbox<
 
   static ownDefaults = textboxDefaultValues;
 
+  // James modified 自动计算文字高度
+  static enableCalcTextHeight = true;
+
   static getDefaults(): Record<string, any> {
     return {
       ...super.getDefaults(),
@@ -136,8 +141,9 @@ export class Textbox<
     this.dynamicMinWidth = 0;
     // wrap lines
     this._styleMap = this._generateStyleMap(this._splitText());
+    // James modified
     // if after wrapping, the width is smaller than dynamicMinWidth, change the width and re-wrap
-    if (this.dynamicMinWidth > this.width) {
+    if (!this.path && this.dynamicMinWidth > this.width) {
       this._set('width', this.dynamicMinWidth);
     }
     if (this.textAlign.includes(JUSTIFY)) {
@@ -146,6 +152,11 @@ export class Textbox<
     }
     // clear cache and re-calculate height
     this.height = this.calcTextHeight();
+
+    // James modified 取消 textbox 自动计算高度
+    if (!this.path && Textbox.enableCalcTextHeight) {
+      this.height = this.calcTextHeight();
+    }
   }
 
   /**
@@ -531,8 +542,10 @@ export class Textbox<
    * @override
    */
   _splitTextIntoLines(text: string) {
+    // James modified 存在path时候不按照宽度换行
+    var wrapWidth = this.path ? 10000000 : this.width;
     const newText = super._splitTextIntoLines(text),
-      graphemeLines = this._wrapText(newText.lines, this.width),
+      graphemeLines = this._wrapText(newText.lines, wrapWidth),
       lines = new Array(graphemeLines.length);
     for (let i = 0; i < graphemeLines.length; i++) {
       lines[i] = graphemeLines[i].join('');
