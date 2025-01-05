@@ -48,8 +48,9 @@ export function getCSSRules(doc: Document) {
           });
 
         for (i = 0, len = propertyValuePairs.length; i < len; i++) {
-          const pair = propertyValuePairs[i].split(':'),
-            property = pair[0].trim(),
+          const pair = propertyValuePairs[i].split(':');
+          if (pair.length < 2) return;
+          const property = pair[0].trim(),
             value = pair[1].trim();
           ruleObj[property] = value;
         }
