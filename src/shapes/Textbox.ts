@@ -1006,3 +1006,4 @@ export class Textbox<
 }
 
 classRegistry.setClass(Textbox);
+classRegistry.setSVGClass(Textbox);

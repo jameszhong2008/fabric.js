@@ -23,8 +23,12 @@ import { parseTransformAttribute } from './parseTransformAttribute';
 import { getPatternDefs } from './getPatternDefs';
 import { PatternOptions, SerializedPatternOptions } from '../Pattern';
 
-const findTag = (el: Element) =>
-  classRegistry.getSVGClass(getTagName(el).toLowerCase());
+const findTag = (el: Element) => {
+  let tagName = getTagName(el).toLowerCase();
+  if (tagName === 'text') tagName = 'textbox';
+
+  return classRegistry.getSVGClass(tagName);
+};
 
 type StorageType = {
   fill: SVGGradientElement | PatternOptions;
@@ -47,7 +51,7 @@ export class ElementsParser {
   declare doc: Document;
   declare clipPaths: Record<string, Element[]>;
   declare gradientDefs: Record<string, SVGGradientElement>;
-  declare patternDefs:  Record<string, PatternOptions>;
+  declare patternDefs: Record<string, PatternOptions>;
   declare cssRules: CSSRules;
 
   constructor(
@@ -146,17 +150,17 @@ export class ElementsParser {
    * @param {*} el
    * @param {*} property
    */
-  resolvePattern (obj: NotParsedFabricObject, el: Element, property: 'fill') {
+  resolvePattern(obj: NotParsedFabricObject, el: Element, property: 'fill') {
     var patternDef = this.extractPropertyDefinition(
       obj,
       property,
-      this.patternDefs
+      this.patternDefs,
     ) as PatternOptions;
     if (patternDef) {
       var pattern = new Pattern(patternDef);
       obj.set(property, pattern);
     }
-  };
+  }
 
   // TODO: resolveClipPath could be run once per clippath with minor work per object.
   // is a refactor that i m not sure is worth on this code
@@ -190,10 +194,10 @@ export class ElementsParser {
       // clipPathOwner.parentNode.appendChild(clipPathTag);
 
       // 暂时通过修改 clipPath的transform处理
-      if (clipPathOwner.hasAttribute("transform"))
+      if (clipPathOwner.hasAttribute('transform'))
         clipPathTag.setAttribute(
-          "transform",
-          clipPathOwner.getAttribute("transform")!
+          'transform',
+          clipPathOwner.getAttribute('transform')!,
         );
       // move the clipPath tag as sibling to the real element that is using it
       clipPathOwner.parentElement!.appendChild(clipPathTag!);
