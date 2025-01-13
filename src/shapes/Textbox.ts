@@ -107,6 +107,15 @@ export class Textbox<
   // James modified 自动计算文字高度
   static enableCalcTextHeight = true;
 
+  /**
+   * James modified 自动计算文字高度
+   * 增加wrap宽度，设置为page的宽度
+   * 增加textbox wrap的默认宽度
+   * @type Number
+   * @default
+   */
+  static defaultWrapWidth = 1920;
+
   static getDefaults(): Record<string, any> {
     return {
       ...super.getDefaults(),
@@ -551,6 +560,8 @@ export class Textbox<
   _splitTextIntoLines(text: string) {
     // James modified 存在path时候不按照宽度换行
     var wrapWidth = this.path ? 10000000 : this.width;
+    // 如果width 不存在， 使用page width
+    wrapWidth = wrapWidth || Textbox.defaultWrapWidth;
     const newText = super._splitTextIntoLines(text),
       graphemeLines = this._wrapText(newText.lines, wrapWidth),
       lines = new Array(graphemeLines.length);
