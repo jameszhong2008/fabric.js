@@ -651,7 +651,7 @@ export class Textbox<
     if ('dy' in parsedAttributes) {
       textOptions.top += parsedAttributes.dy;
     }
-    if (!('fontSize' in options)) {
+    if (!('fontSize' in textOptions)) {
       textOptions.fontSize = DEFAULT_SVG_FONT_SIZE;
     }
 
@@ -674,7 +674,7 @@ export class Textbox<
     textPath: any,
     options: any,
     parsedAttributes: { [key: string]: string },
-  ) => {
+  ): Textbox => {
     var parsedAnchor = parsedAttributes.textAnchor || 'left';
 
     var textPathParsedAttributes = parseAttributes(textPath, [
@@ -745,7 +745,7 @@ export class Textbox<
     element: any,
     options: any,
     parsedAttributes: { [key: string]: string },
-  ) {
+  ): Textbox {
     var textContent = '';
     var parsedAnchor = parsedAttributes.textAnchor || 'left';
     // 是否需要根据tspan位置计算对齐
@@ -932,7 +932,7 @@ export class Textbox<
 
     // 导入时打开自动计算文字高度，否则文字高度和 Y 轴位置错误
     Textbox.enableCalcTextHeight = true;
-    var text = new Textbox(textContent, options) as any,
+    var text = new Textbox(textContent, options),
       textOneLineHeight = text.height / lineCnt,
       textHeightScaleFactor = text.getScaledHeight() / text.height,
       lineHeightDiff =

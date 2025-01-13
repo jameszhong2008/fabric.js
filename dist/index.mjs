@@ -4316,7 +4316,7 @@ const makeBoundingBoxFromPoints = points => {
   };
 };
 
-const _excluded$i = ["translateX", "translateY", "scaleX", "scaleY"];
+const _excluded$h = ["translateX", "translateY", "scaleX", "scaleY"];
 
 /**
  * given an object and a transform, apply the inverse transform to the object,
@@ -4358,7 +4358,7 @@ const applyTransformToObject = (object, transform) => {
       scaleX,
       scaleY
     } = _qrDecompose,
-    otherOptions = _objectWithoutProperties(_qrDecompose, _excluded$i),
+    otherOptions = _objectWithoutProperties(_qrDecompose, _excluded$h),
     center = new Point(translateX, translateY);
   object.flipX = false;
   object.flipY = false;
@@ -5649,14 +5649,14 @@ class AnimationBase {
   }
 }
 
-const _excluded$h = ["startValue", "endValue"];
+const _excluded$g = ["startValue", "endValue"];
 class ValueAnimation extends AnimationBase {
   constructor(_ref) {
     let {
         startValue = 0,
         endValue = 100
       } = _ref,
-      otherOptions = _objectWithoutProperties(_ref, _excluded$h);
+      otherOptions = _objectWithoutProperties(_ref, _excluded$g);
     super(_objectSpread2(_objectSpread2({}, otherOptions), {}, {
       startValue,
       byValue: endValue - startValue
@@ -5671,14 +5671,14 @@ class ValueAnimation extends AnimationBase {
   }
 }
 
-const _excluded$g = ["startValue", "endValue"];
+const _excluded$f = ["startValue", "endValue"];
 class ArrayAnimation extends AnimationBase {
   constructor(_ref) {
     let {
         startValue = [0],
         endValue = [100]
       } = _ref,
-      options = _objectWithoutProperties(_ref, _excluded$g);
+      options = _objectWithoutProperties(_ref, _excluded$f);
     super(_objectSpread2(_objectSpread2({}, options), {}, {
       startValue,
       byValue: endValue.map((value, i) => value - startValue[i])
@@ -5693,7 +5693,7 @@ class ArrayAnimation extends AnimationBase {
   }
 }
 
-const _excluded$f = ["startValue", "endValue", "easing", "onChange", "onComplete", "abort"];
+const _excluded$e = ["startValue", "endValue", "easing", "onChange", "onComplete", "abort"];
 const defaultColorEasing = (timeElapsed, startValue, byValue, duration) => {
   const durationProgress = 1 - Math.cos(timeElapsed / duration * halfPI);
   return startValue + byValue * durationProgress;
@@ -5709,7 +5709,7 @@ class ColorAnimation extends AnimationBase {
         onComplete,
         abort
       } = _ref,
-      options = _objectWithoutProperties(_ref, _excluded$f);
+      options = _objectWithoutProperties(_ref, _excluded$e);
     const startColor = new Color(startValue).getSource();
     const endColor = new Color(endValue).getSource();
     super(_objectSpread2(_objectSpread2({}, options), {}, {
@@ -6678,7 +6678,7 @@ class ObjectGeometry extends CommonMethods {
   }
 }
 
-const _excluded$e = ["type"],
+const _excluded$d = ["type"],
   _excluded2$4 = ["extraParam"];
 /**
  * Root object class from which all 2d shape classes inherit from
@@ -8124,7 +8124,7 @@ let FabricObject$1 = class FabricObject extends ObjectGeometry {
    * @returns {Promise<FabricObject>}
    */
   static _fromObject(_ref3) {
-    let serializedObjectOptions = _objectWithoutProperties(_ref3, _excluded$e);
+    let serializedObjectOptions = _objectWithoutProperties(_ref3, _excluded$d);
     let _ref4 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
       {
         extraParam
@@ -8872,7 +8872,7 @@ const scalingEqually = wrapWithFireEvent(SCALING, wrapWithFixedAnchor(scaleObjec
 const scalingX = wrapWithFireEvent(SCALING, wrapWithFixedAnchor(scaleObjectX));
 const scalingY = wrapWithFireEvent(SCALING, wrapWithFixedAnchor(scaleObjectY));
 
-const _excluded$d = ["target", "ex", "ey", "skewingSide"];
+const _excluded$c = ["target", "ex", "ey", "skewingSide"];
 const AXIS_KEYS = {
   x: {
     counterAxis: 'y',
@@ -8922,7 +8922,7 @@ function skewObject(axis, _ref, pointer) {
       ey,
       skewingSide
     } = _ref,
-    transform = _objectWithoutProperties(_ref, _excluded$d);
+    transform = _objectWithoutProperties(_ref, _excluded$c);
   const {
       skew: skewKey
     } = AXIS_KEYS[axis],
@@ -10788,7 +10788,7 @@ function parseAttributes(element, attributes, cssRules) {
   return svgValidParentsRegEx.test(element.nodeName) ? mergedAttrs : setStrokeFillOpacity(mergedAttrs);
 }
 
-const _excluded$c = ["left", "top", "width", "height", "visible"];
+const _excluded$b = ["left", "top", "width", "height", "visible"];
 const rectDefaultValues = {
   rx: 0,
   ry: 0
@@ -10903,7 +10903,7 @@ class Rect extends FabricObject {
         height = 0,
         visible = true
       } = _parseAttributes,
-      restOfparsedAttributes = _objectWithoutProperties(_parseAttributes, _excluded$c);
+      restOfparsedAttributes = _objectWithoutProperties(_parseAttributes, _excluded$b);
     return new this(_objectSpread2(_objectSpread2(_objectSpread2({}, options), restOfparsedAttributes), {}, {
       left,
       top,
@@ -11066,7 +11066,7 @@ class FitContentLayout extends LayoutStrategy {
 _defineProperty(FitContentLayout, "type", 'fit-content');
 classRegistry.setClass(FitContentLayout);
 
-const _excluded$b = ["strategy"],
+const _excluded$a = ["strategy"],
   _excluded2$3 = ["target", "strategy", "bubbles", "prevStrategy"];
 const LAYOUT_MANAGER = 'layoutManager';
 class LayoutManager {
@@ -11169,7 +11169,7 @@ class LayoutManager {
       context
     });
     if (type === LAYOUT_TYPE_IMPERATIVE && context.deep) {
-      const tricklingContext = _objectWithoutProperties(context, _excluded$b);
+      const tricklingContext = _objectWithoutProperties(context, _excluded$a);
       // traverse the tree
       target.forEachObject(object => object.layoutManager && object.layoutManager.performLayout(_objectSpread2(_objectSpread2({}, tricklingContext), {}, {
         bubbles: false,
@@ -11318,7 +11318,7 @@ class LayoutManager {
 }
 classRegistry.setClass(LayoutManager, LAYOUT_MANAGER);
 
-const _excluded$a = ["type", "objects", "layoutManager"];
+const _excluded$9 = ["type", "objects", "layoutManager"];
 /**
  * This class handles the specific case of creating a group using {@link Group#fromObject} and is not meant to be used in any other case.
  * We could have used a boolean in the constructor, as we did previously, but we think the boolean
@@ -11875,7 +11875,7 @@ class Group extends createCollectionMixin(FabricObject) {
         objects = [],
         layoutManager
       } = _ref2,
-      options = _objectWithoutProperties(_ref2, _excluded$a);
+      options = _objectWithoutProperties(_ref2, _excluded$9);
     return Promise.all([enlivenObjects(objects, abortable), enlivenObjectEnlivables(options, abortable)]).then(_ref3 => {
       let [objects, hydratedOptions] = _ref3;
       const group = new this(objects, _objectSpread2(_objectSpread2(_objectSpread2({}, options), hydratedOptions), {}, {
@@ -14347,7 +14347,7 @@ class TextEditingManager {
   }
 }
 
-const _excluded$9 = ["target", "oldTarget", "fireCanvas", "e"];
+const _excluded$8 = ["target", "oldTarget", "fireCanvas", "e"];
 const addEventOptions = {
   passive: false
 };
@@ -15372,7 +15372,7 @@ class Canvas extends SelectableCanvas {
         fireCanvas,
         e
       } = _ref,
-      data = _objectWithoutProperties(_ref, _excluded$9);
+      data = _objectWithoutProperties(_ref, _excluded$8);
     const {
       targetIn,
       targetOut,
@@ -16088,7 +16088,7 @@ classRegistry.setClass(Gradient, 'gradient');
 classRegistry.setClass(Gradient, 'linear');
 classRegistry.setClass(Gradient, 'radial');
 
-const _excluded$8 = ["type", "source", "patternTransform"];
+const _excluded$7 = ["type", "source", "patternTransform"];
 
 /**
  * @see {@link http://fabricjs.com/patterns demo}
@@ -16247,7 +16247,7 @@ class Pattern {
         source,
         patternTransform
       } = _ref2,
-      otherOptions = _objectWithoutProperties(_ref2, _excluded$8);
+      otherOptions = _objectWithoutProperties(_ref2, _excluded$7);
     const img = await loadImage(source, _objectSpread2(_objectSpread2({}, options), {}, {
       crossOrigin: otherOptions.crossOrigin
     }));
@@ -16395,7 +16395,7 @@ class BaseBrush {
   }
 }
 
-const _excluded$7 = ["path", "left", "top"],
+const _excluded$6 = ["path", "left", "top"],
   _excluded2$2 = ["d"];
 class Path extends FabricObject {
   /**
@@ -16411,7 +16411,7 @@ class Path extends FabricObject {
         left,
         top
       } = _ref,
-      options = _objectWithoutProperties(_ref, _excluded$7);
+      options = _objectWithoutProperties(_ref, _excluded$6);
     super();
     Object.assign(this, Path.ownDefaults);
     this.setOptions(options);
@@ -16989,7 +16989,7 @@ class PencilBrush extends BaseBrush {
   }
 }
 
-const _excluded$6 = ["left", "top", "radius"];
+const _excluded$5 = ["left", "top", "radius"];
 const CIRCLE_PROPS = ['radius', 'startAngle', 'endAngle', 'counterClockwise'];
 const circleDefaultValues = {
   radius: 0,
@@ -17123,7 +17123,7 @@ class Circle extends FabricObject {
         top = 0,
         radius = 0
       } = _ref,
-      otherParsedAttributes = _objectWithoutProperties(_ref, _excluded$6);
+      otherParsedAttributes = _objectWithoutProperties(_ref, _excluded$5);
 
     // this probably requires to be fixed for default origins not being top/left.
 
@@ -17506,7 +17506,7 @@ class PatternBrush extends PencilBrush {
   }
 }
 
-const _excluded$5 = ["x1", "y1", "x2", "y2"],
+const _excluded$4 = ["x1", "y1", "x2", "y2"],
   _excluded2$1 = ["x1", "y1", "x2", "y2"];
 // @TODO this code is terrible and Line should be a special case of polyline.
 
@@ -17718,7 +17718,7 @@ class Line extends FabricObject {
         x2 = 0,
         y2 = 0
       } = _parseAttributes,
-      parsedAttributes = _objectWithoutProperties(_parseAttributes, _excluded$5);
+      parsedAttributes = _objectWithoutProperties(_parseAttributes, _excluded$4);
     return new this([x1, y1, x2, y2], parsedAttributes);
   }
 
@@ -17984,7 +17984,7 @@ function parsePointsAttribute(points) {
   return parsedPoints;
 }
 
-const _excluded$4 = ["left", "top"];
+const _excluded$3 = ["left", "top"];
 const polylineDefaultValues = {
   /**
    * @deprecated transient option soon to be removed in favor of a different design
@@ -18276,7 +18276,7 @@ class Polyline extends FabricObject {
   static async fromElement(element, options, cssRules) {
     const points = parsePointsAttribute(element.getAttribute('points')),
       _parseAttributes = parseAttributes(element, this.ATTRIBUTE_NAMES, cssRules),
-      parsedAttributes = _objectWithoutProperties(_parseAttributes, _excluded$4);
+      parsedAttributes = _objectWithoutProperties(_parseAttributes, _excluded$3);
     return new this(points, _objectSpread2(_objectSpread2({}, parsedAttributes), options));
   }
 
@@ -18861,7 +18861,251 @@ class TextSVGExportMixin extends FabricObjectSVGExportMixin {
   }
 }
 
-const _excluded$3 = ["textAnchor", "textDecoration", "dx", "dy", "top", "left", "fontSize", "strokeWidth"];
+const ACTION_NAME$1 = MODIFY_POLY;
+/**
+ * This function locates the controls.
+ * It'll be used both for drawing and for interaction.
+ */
+const createPolyPositionHandler = pointIndex => {
+  return function (dim, finalMatrix, polyObject) {
+    const {
+      points,
+      pathOffset
+    } = polyObject;
+    return new Point(points[pointIndex]).subtract(pathOffset).transform(multiplyTransformMatrices(polyObject.getViewportTransform(), polyObject.calcTransformMatrix()));
+  };
+};
+
+/**
+ * This function defines what the control does.
+ * It'll be called on every mouse move after a control has been clicked and is being dragged.
+ * The function receives as argument the mouse event, the current transform object
+ * and the current position in canvas coordinate `transform.target` is a reference to the
+ * current object being transformed.
+ */
+const polyActionHandler = (eventData, transform, x, y) => {
+  const {
+    target,
+    pointIndex
+  } = transform;
+  const poly = target;
+  const mouseLocalPosition = sendPointToPlane(new Point(x, y), undefined, poly.calcOwnMatrix());
+  poly.points[pointIndex] = mouseLocalPosition.add(poly.pathOffset);
+  poly.setDimensions();
+  return true;
+};
+
+/**
+ * Keep the polygon in the same position when we change its `width`/`height`/`top`/`left`.
+ */
+const factoryPolyActionHandler = (pointIndex, fn) => {
+  return function (eventData, transform, x, y) {
+    const poly = transform.target,
+      anchorPoint = new Point(poly.points[(pointIndex > 0 ? pointIndex : poly.points.length) - 1]),
+      anchorPointInParentPlane = anchorPoint.subtract(poly.pathOffset).transform(poly.calcOwnMatrix()),
+      actionPerformed = fn(eventData, _objectSpread2(_objectSpread2({}, transform), {}, {
+        pointIndex
+      }), x, y);
+    const newAnchorPointInParentPlane = anchorPoint.subtract(poly.pathOffset).transform(poly.calcOwnMatrix());
+    const diff = newAnchorPointInParentPlane.subtract(anchorPointInParentPlane);
+    poly.left -= diff.x;
+    poly.top -= diff.y;
+    return actionPerformed;
+  };
+};
+const createPolyActionHandler = pointIndex => wrapWithFireEvent(ACTION_NAME$1, factoryPolyActionHandler(pointIndex, polyActionHandler));
+function createPolyControls(arg0) {
+  let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  const controls = {};
+  for (let idx = 0; idx < (typeof arg0 === 'number' ? arg0 : arg0.points.length); idx++) {
+    controls["p".concat(idx)] = new Control(_objectSpread2({
+      actionName: ACTION_NAME$1,
+      positionHandler: createPolyPositionHandler(idx),
+      actionHandler: createPolyActionHandler(idx)
+    }, options));
+  }
+  return controls;
+}
+
+const ACTION_NAME = 'modifyPath';
+const calcPathPointPosition = (pathObject, commandIndex, pointIndex) => {
+  const {
+    path,
+    pathOffset
+  } = pathObject;
+  const command = path[commandIndex];
+  return new Point(command[pointIndex] - pathOffset.x, command[pointIndex + 1] - pathOffset.y).transform(multiplyTransformMatrices(pathObject.getViewportTransform(), pathObject.calcTransformMatrix()));
+};
+const movePathPoint = (pathObject, x, y, commandIndex, pointIndex) => {
+  const {
+    path,
+    pathOffset
+  } = pathObject;
+  const anchorCommand = path[(commandIndex > 0 ? commandIndex : path.length) - 1];
+  const anchorPoint = new Point(anchorCommand[pointIndex], anchorCommand[pointIndex + 1]);
+  const anchorPointInParentPlane = anchorPoint.subtract(pathOffset).transform(pathObject.calcOwnMatrix());
+  const mouseLocalPosition = sendPointToPlane(new Point(x, y), undefined, pathObject.calcOwnMatrix());
+  path[commandIndex][pointIndex] = mouseLocalPosition.x + pathOffset.x;
+  path[commandIndex][pointIndex + 1] = mouseLocalPosition.y + pathOffset.y;
+  pathObject.setDimensions();
+  const newAnchorPointInParentPlane = anchorPoint.subtract(pathObject.pathOffset).transform(pathObject.calcOwnMatrix());
+  const diff = newAnchorPointInParentPlane.subtract(anchorPointInParentPlane);
+  pathObject.left -= diff.x;
+  pathObject.top -= diff.y;
+  pathObject.set('dirty', true);
+  return true;
+};
+
+/**
+ * This function locates the controls.
+ * It'll be used both for drawing and for interaction.
+ */
+function pathPositionHandler(dim, finalMatrix, pathObject) {
+  const {
+    commandIndex,
+    pointIndex
+  } = this;
+  return calcPathPointPosition(pathObject, commandIndex, pointIndex);
+}
+
+/**
+ * This function defines what the control does.
+ * It'll be called on every mouse move after a control has been clicked and is being dragged.
+ * The function receives as argument the mouse event, the current transform object
+ * and the current position in canvas coordinate `transform.target` is a reference to the
+ * current object being transformed.
+ */
+function pathActionHandler(eventData, transform, x, y) {
+  const {
+    target
+  } = transform;
+  const {
+    commandIndex,
+    pointIndex
+  } = this;
+  const actionPerformed = movePathPoint(target, x, y, commandIndex, pointIndex);
+  {
+    fireEvent(this.actionName, _objectSpread2(_objectSpread2({}, commonEventInfo(eventData, transform, x, y)), {}, {
+      commandIndex,
+      pointIndex
+    }));
+  }
+  return actionPerformed;
+}
+const indexFromPrevCommand = previousCommandType => previousCommandType === 'C' ? 5 : previousCommandType === 'Q' ? 3 : 1;
+class PathPointControl extends Control {
+  constructor(options) {
+    super(options);
+  }
+  render(ctx, left, top, styleOverride, fabricObject) {
+    const overrides = _objectSpread2(_objectSpread2({}, styleOverride), {}, {
+      cornerColor: this.controlFill,
+      cornerStrokeColor: this.controlStroke,
+      transparentCorners: !this.controlFill
+    });
+    super.render(ctx, left, top, overrides, fabricObject);
+  }
+}
+class PathControlPointControl extends PathPointControl {
+  constructor(options) {
+    super(options);
+  }
+  render(ctx, left, top, styleOverride, fabricObject) {
+    const {
+      path
+    } = fabricObject;
+    const {
+      commandIndex,
+      pointIndex,
+      connectToCommandIndex,
+      connectToPointIndex
+    } = this;
+    ctx.save();
+    ctx.strokeStyle = this.controlStroke;
+    if (this.connectionDashArray) {
+      ctx.setLineDash(this.connectionDashArray);
+    }
+    const [commandType] = path[commandIndex];
+    const point = calcPathPointPosition(fabricObject, connectToCommandIndex, connectToPointIndex);
+    if (commandType === 'Q') {
+      // one control point connects to 2 points
+      const point2 = calcPathPointPosition(fabricObject, commandIndex, pointIndex + 2);
+      ctx.moveTo(point2.x, point2.y);
+      ctx.lineTo(left, top);
+    } else {
+      ctx.moveTo(left, top);
+    }
+    ctx.lineTo(point.x, point.y);
+    ctx.stroke();
+    ctx.restore();
+    super.render(ctx, left, top, styleOverride, fabricObject);
+  }
+}
+const createControl = (commandIndexPos, pointIndexPos, isControlPoint, options, connectToCommandIndex, connectToPointIndex) => new (isControlPoint ? PathControlPointControl : PathPointControl)(_objectSpread2(_objectSpread2({
+  commandIndex: commandIndexPos,
+  pointIndex: pointIndexPos,
+  actionName: ACTION_NAME,
+  positionHandler: pathPositionHandler,
+  actionHandler: pathActionHandler,
+  connectToCommandIndex,
+  connectToPointIndex
+}, options), isControlPoint ? options.controlPointStyle : options.pointStyle));
+function createPathControls(path) {
+  let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  const controls = {};
+  let previousCommandType = 'M';
+  path.path.forEach((command, commandIndex) => {
+    const commandType = command[0];
+    if (commandType !== 'Z') {
+      controls["c_".concat(commandIndex, "_").concat(commandType)] = createControl(commandIndex, command.length - 2, false, options);
+    }
+    switch (commandType) {
+      case 'C':
+        controls["c_".concat(commandIndex, "_C_CP_1")] = createControl(commandIndex, 1, true, options, commandIndex - 1, indexFromPrevCommand(previousCommandType));
+        controls["c_".concat(commandIndex, "_C_CP_2")] = createControl(commandIndex, 3, true, options, commandIndex, 5);
+        break;
+      case 'Q':
+        controls["c_".concat(commandIndex, "_Q_CP_1")] = createControl(commandIndex, 1, true, options, commandIndex, 3);
+        break;
+    }
+    previousCommandType = commandType;
+  });
+  return controls;
+}
+
+var index = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  changeWidth: changeWidth,
+  createObjectDefaultControls: createObjectDefaultControls,
+  createPathControls: createPathControls,
+  createPolyActionHandler: createPolyActionHandler,
+  createPolyControls: createPolyControls,
+  createPolyPositionHandler: createPolyPositionHandler,
+  createResizeControls: createResizeControls,
+  createTextboxDefaultControls: createTextboxDefaultControls,
+  dragHandler: dragHandler,
+  factoryPolyActionHandler: factoryPolyActionHandler,
+  getLocalPoint: getLocalPoint,
+  polyActionHandler: polyActionHandler,
+  renderCircleControl: renderCircleControl,
+  renderSquareControl: renderSquareControl,
+  rotationStyleHandler: rotationStyleHandler,
+  rotationWithSnapping: rotationWithSnapping,
+  scaleCursorStyleHandler: scaleCursorStyleHandler,
+  scaleOrSkewActionName: scaleOrSkewActionName,
+  scaleSkewCursorStyleHandler: scaleSkewCursorStyleHandler,
+  scalingEqually: scalingEqually,
+  scalingX: scalingX,
+  scalingXOrSkewingY: scalingXOrSkewingY,
+  scalingY: scalingY,
+  scalingYOrSkewingX: scalingYOrSkewingX,
+  skewCursorStyleHandler: skewCursorStyleHandler,
+  skewHandlerX: skewHandlerX,
+  skewHandlerY: skewHandlerY,
+  wrapWithFireEvent: wrapWithFireEvent,
+  wrapWithFixedAnchor: wrapWithFixedAnchor
+});
+
 let measuringContext;
 
 /**
@@ -18926,6 +19170,12 @@ class FabricText extends StyledText {
     const path = this.path;
     if (path) {
       path.segmentsInfo = getPathSegmentsInfo(path.path);
+
+      // James modified 检查空路径的话，设置path为空
+      if (!path.width && !path.height) {
+        console.log(this, 'text path empty');
+        this.path = undefined;
+      }
     }
   }
 
@@ -19180,7 +19430,8 @@ class FabricText extends StyledText {
         // at this point charbox are either standard or full with pathInfo if there is a path.
         const charBox = this.__charBounds[i][j];
         currentColor = this.getValueOfPropertyAt(i, j, 'textBackgroundColor');
-        if (this.path) {
+        // James modified
+        if (this.path && !this.isEditing) {
           ctx.save();
           ctx.translate(charBox.renderLeft, charBox.renderTop);
           ctx.rotate(charBox.angle);
@@ -19345,15 +19596,26 @@ class FabricText extends StyledText {
       positionInPath += this.pathStartOffset * (reverse ? -1 : 1);
       for (let i = reverse ? llength - 1 : 0; reverse ? i >= 0 : i < llength; reverse ? i-- : i++) {
         graphemeInfo = lineBounds[i];
-        if (positionInPath > totalPathLength) {
+
+        // James modified
+        /* if (positionInPath > totalPathLength) {
           positionInPath %= totalPathLength;
         } else if (positionInPath < 0) {
           positionInPath += totalPathLength;
+        } */
+        // 超过路径范围外不显示
+        var visible = false;
+        var tolerance = 2;
+        if (positionInPath >= 0 - tolerance && positionInPath + graphemeInfo.kernedWidth <= totalPathLength + tolerance) {
+          visible = true;
         }
-        // it would probably much faster to send all the grapheme position for a line
-        // and calculate path position/angle at once.
-        this._setGraphemeOnPath(positionInPath, graphemeInfo);
+        if (visible) {
+          // it would probably much faster to send all the grapheme position for a line
+          // and calculate path position/angle at once.
+          this._setGraphemeOnPath(positionInPath, graphemeInfo);
+        }
         positionInPath += graphemeInfo.kernedWidth;
+        graphemeInfo.visible = visible;
       }
     }
     return {
@@ -19464,6 +19726,17 @@ class FabricText extends StyledText {
   }
 
   /**
+   * James add
+   * 是否应该按行隐藏文字
+   * @returns
+   */
+  _shouldHideTextLine() {
+    return !this.isEditing && !this.path;
+  }
+
+  /**
+   * James modified
+   * 框子外的文字不绘制
    * @private
    * @param {CanvasRenderingContext2D} ctx Context to render on
    * @param {String} method Method name ("fillText" or "strokeText")
@@ -19473,14 +19746,50 @@ class FabricText extends StyledText {
     let lineHeights = 0;
     const left = this._getLeftOffset(),
       top = this._getTopOffset();
+
+    // 存在隐藏文字
+    this.hasHideText = false;
     for (let i = 0, len = this._textLines.length; i < len; i++) {
       const heightOfLine = this.getHeightOfLine(i),
         maxHeight = heightOfLine / this.lineHeight,
         leftOffset = this._getLineLeftOffset(i);
+
+      // 非编辑状态超过box 不显示
+      if (this._shouldHideTextLine() && lineHeights + maxHeight * 0.8 > this.height) {
+        this.hasHideText = true;
+        break;
+      }
       this._renderTextLine(method, ctx, this._textLines[i], left + leftOffset, top + lineHeights + maxHeight, i);
       lineHeights += heightOfLine;
     }
     ctx.restore();
+  }
+
+  /**
+   * James add
+   * 增加隐藏文字图标
+   */
+  showHideTextIcon() {
+    var _this$controls;
+    const control = (_this$controls = this.controls) === null || _this$controls === void 0 ? void 0 : _this$controls['mb'];
+    if (control) {
+      control.render = (ctx, left, top, styleOverride, fabricObject) => {
+        styleOverride = styleOverride || {};
+        if (this.hasHideText) {
+          styleOverride = _objectSpread2(_objectSpread2({}, styleOverride), {}, {
+            cornerStrokeColor: '#FF0000',
+            cornerSize: 10
+          });
+        }
+        switch (styleOverride.cornerStyle || fabricObject.cornerStyle) {
+          case 'circle':
+            renderCircleControl.call(control, ctx, left, top, styleOverride, fabricObject);
+            break;
+          default:
+            renderSquareControl.call(control, ctx, left, top, styleOverride, fabricObject);
+        }
+      };
+    }
   }
 
   /**
@@ -19529,6 +19838,8 @@ class FabricText extends StyledText {
       shortCut = !isJustify && this.charSpacing === 0 && this.isEmptyStyles(lineIndex) && !path,
       isLtr = this.direction === 'ltr',
       sign = this.direction === 'ltr' ? 1 : -1,
+      // James modified
+      // 修改为之前绘制 direction rtl的方式，5.3.0版本的绘制方式显示有问题
       // this was changed in the PR #7674
       // currentDirection = ctx.canvas.getAttribute('dir');
       currentDirection = ctx.direction;
@@ -19542,6 +19853,7 @@ class FabricText extends StyledText {
     ctx.save();
     if (currentDirection !== this.direction) {
       ctx.canvas.setAttribute('dir', isLtr ? 'ltr' : 'rtl');
+      // James modified
       ctx.direction = isLtr ? 'ltr' : 'rtl';
       ctx.textAlign = isLtr ? LEFT : RIGHT;
     }
@@ -19549,6 +19861,7 @@ class FabricText extends StyledText {
     if (shortCut) {
       // render all the line in one pass without checking
       // drawingLeft = isLtr ? left : left - this.getLineWidth(lineIndex);
+      // James modified
       this._renderChar(method, ctx, lineIndex, 0, line.join(''), left, top);
       ctx.restore();
       return;
@@ -19575,12 +19888,15 @@ class FabricText extends StyledText {
         timeToRender = hasStyleChanged(actualStyle, nextStyle, false);
       }
       if (timeToRender) {
-        if (path) {
-          ctx.save();
-          ctx.translate(charBox.renderLeft, charBox.renderTop);
-          ctx.rotate(charBox.angle);
-          this._renderChar(method, ctx, lineIndex, i, charsToRender, -boxWidth / 2, 0);
-          ctx.restore();
+        // James modified
+        if (path && !this.isEditing) {
+          if (charBox.visible) {
+            ctx.save();
+            ctx.translate(charBox.renderLeft, charBox.renderTop);
+            ctx.rotate(charBox.angle);
+            this._renderChar(method, ctx, lineIndex, i, charsToRender, -boxWidth / 2, 0);
+            ctx.restore();
+          }
         } else {
           drawingLeft = left;
           this._renderChar(method, ctx, lineIndex, i, charsToRender, drawingLeft, top);
@@ -19983,6 +20299,8 @@ class FabricText extends StyledText {
    * @returns  Lines in the text
    */
   _splitTextIntoLines(text) {
+    // James modified 生成换行数据， 如果是path则不进行换行(删除换行字符)
+    text = this.path ? text.replaceAll(/\r?\n/g, '') : text;
     const lines = text.split(this._reNewline),
       newLines = new Array(lines.length),
       newLine = ['\n'];
@@ -20055,66 +20373,6 @@ class FabricText extends StyledText {
    * @see https://developer.mozilla.org/en-US/docs/Web/CSS/font-family#generic-name
    */
 
-  /**
-   * Returns FabricText instance from an SVG element (<b>not yet implemented</b>)
-   * @static
-   * @memberOf Text
-   * @param {HTMLElement} element Element to parse
-   * @param {Object} [options] Options object
-   */
-  static async fromElement(element, options, cssRules) {
-    const parsedAttributes = parseAttributes(element, FabricText.ATTRIBUTE_NAMES, cssRules);
-    const _options$parsedAttrib = _objectSpread2(_objectSpread2({}, options), parsedAttributes),
-      {
-        textAnchor = LEFT,
-        textDecoration = '',
-        dx = 0,
-        dy = 0,
-        top = 0,
-        left = 0,
-        fontSize = DEFAULT_SVG_FONT_SIZE,
-        strokeWidth = 1
-      } = _options$parsedAttrib,
-      restOfOptions = _objectWithoutProperties(_options$parsedAttrib, _excluded$3);
-    const textContent = (element.textContent || '').replace(/^\s+|\s+$|\n+/g, '').replace(/\s+/g, ' ');
-
-    // this code here is probably the usual issue for SVG center find
-    // this can later looked at again and probably removed.
-
-    const text = new this(textContent, _objectSpread2({
-        left: left + dx,
-        top: top + dy,
-        underline: textDecoration.includes('underline'),
-        overline: textDecoration.includes('overline'),
-        linethrough: textDecoration.includes('line-through'),
-        // we initialize this as 0
-        strokeWidth: 0,
-        fontSize
-      }, restOfOptions)),
-      textHeightScaleFactor = text.getScaledHeight() / text.height,
-      lineHeightDiff = (text.height + text.strokeWidth) * text.lineHeight - text.height,
-      scaledDiff = lineHeightDiff * textHeightScaleFactor,
-      textHeight = text.getScaledHeight() + scaledDiff;
-    let offX = 0;
-    /*
-      Adjust positioning:
-        x/y attributes in SVG correspond to the bottom-left corner of text bounding box
-        fabric output by default at top, left.
-    */
-    if (textAnchor === CENTER) {
-      offX = text.getScaledWidth() / 2;
-    }
-    if (textAnchor === RIGHT) {
-      offX = text.getScaledWidth();
-    }
-    text.set({
-      left: text.left - offX,
-      top: text.top - (textHeight - text.fontSize * (0.07 + text._fontSizeFraction)) / text.lineHeight,
-      strokeWidth
-    });
-    return text;
-  }
-
   /* _FROM_SVG_END_ */
 
   /**
@@ -20138,6 +20396,11 @@ class FabricText extends StyledText {
 _defineProperty(FabricText, "textLayoutProperties", textLayoutProperties);
 _defineProperty(FabricText, "cacheProperties", [...cacheProperties, ...additionalProps]);
 _defineProperty(FabricText, "ownDefaults", textDefaultValues);
+/**
+ * James add
+ * 是否启用计算文字高度
+ */
+_defineProperty(FabricText, "enableCalcTextHeight", void 0);
 _defineProperty(FabricText, "type", 'Text');
 _defineProperty(FabricText, "genericFonts", ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui', 'ui-serif', 'ui-sans-serif', 'ui-monospace', 'ui-rounded', 'math', 'emoji', 'fangsong']);
 /* _FROM_SVG_START_ */
@@ -20150,7 +20413,6 @@ _defineProperty(FabricText, "genericFonts", ['serif', 'sans-serif', 'monospace',
 _defineProperty(FabricText, "ATTRIBUTE_NAMES", SHARED_ATTRIBUTES.concat('x', 'y', 'dx', 'dy', 'font-family', 'font-style', 'font-weight', 'font-size', 'letter-spacing', 'text-decoration', 'text-anchor'));
 applyMixins(FabricText, [TextSVGExportMixin]);
 classRegistry.setClass(FabricText);
-classRegistry.setSVGClass(FabricText);
 
 /**
  * #### Dragging IText/Textbox Lifecycle
@@ -22864,6 +23126,8 @@ classRegistry.setClass(IText);
 // legacy
 classRegistry.setClass(IText, 'i-text');
 
+var _Textbox;
+
 // @TODO: Many things here are configuration related and shouldn't be on the class nor prototype
 // regexes, list of properties that are not suppose to change by instances, magic consts.
 // this will be a separated effort
@@ -22925,8 +23189,9 @@ class Textbox extends IText {
     this.dynamicMinWidth = 0;
     // wrap lines
     this._styleMap = this._generateStyleMap(this._splitText());
+    // James modified
     // if after wrapping, the width is smaller than dynamicMinWidth, change the width and re-wrap
-    if (this.dynamicMinWidth > this.width) {
+    if (!this.path && this.dynamicMinWidth > this.width) {
       this._set('width', this.dynamicMinWidth);
     }
     if (this.textAlign.includes(JUSTIFY)) {
@@ -22935,6 +23200,11 @@ class Textbox extends IText {
     }
     // clear cache and re-calculate height
     this.height = this.calcTextHeight();
+
+    // James modified 取消 textbox 自动计算高度
+    if (!this.path && Textbox.enableCalcTextHeight) {
+      this.height = this.calcTextHeight();
+    }
   }
 
   /**
@@ -23289,8 +23559,10 @@ class Textbox extends IText {
    * @override
    */
   _splitTextIntoLines(text) {
+    // James modified 存在path时候不按照宽度换行
+    var wrapWidth = this.path ? 10000000 : this.width;
     const newText = super._splitTextIntoLines(text),
-      graphemeLines = this._wrapText(newText.lines, this.width),
+      graphemeLines = this._wrapText(newText.lines, wrapWidth),
       lines = new Array(graphemeLines.length);
     for (let i = 0; i < graphemeLines.length; i++) {
       lines[i] = graphemeLines[i].join('');
@@ -23328,7 +23600,298 @@ class Textbox extends IText {
     let propertiesToInclude = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
     return super.toObject(['minWidth', 'splitByGrapheme', ...propertiesToInclude]);
   }
+
+  /**
+   * Returns FabricText instance from an SVG element (<b>not yet implemented</b>)
+   * @static
+   * @memberOf Text
+   * @param {HTMLElement} element Element to parse
+   * @param {Object} [options] Options object
+   */
+  static async fromElement(element, options, cssRules) {
+    if (!element) {
+      return null;
+    }
+    var parsedAttributes = parseAttributes(element, Textbox.ATTRIBUTE_NAMES, cssRules);
+    const textOptions = _objectSpread2(_objectSpread2({}, cssRules ? JSON.parse(JSON.stringify(cssRules)) : {}), parsedAttributes);
+    // 处理style中字体样式带单引号问题
+    let reg = /^'(.*)'$/;
+    if (reg.test(textOptions.fontFamily)) {
+      textOptions.fontFamily = textOptions.fontFamily.slice(1, -1);
+    }
+    textOptions.top = textOptions.top || 0;
+    textOptions.left = textOptions.left || 0;
+    if (parsedAttributes.textDecoration) {
+      var textDecoration = parsedAttributes.textDecoration;
+      if (textDecoration.indexOf('underline') !== -1) {
+        textOptions.underline = true;
+      }
+      if (textDecoration.indexOf('overline') !== -1) {
+        textOptions.overline = true;
+      }
+      if (textDecoration.indexOf('line-through') !== -1) {
+        textOptions.linethrough = true;
+      }
+      delete textOptions.textDecoration;
+    }
+    if ('dx' in parsedAttributes) {
+      textOptions.left += parsedAttributes.dx;
+    }
+    if ('dy' in parsedAttributes) {
+      textOptions.top += parsedAttributes.dy;
+    }
+    if (!('fontSize' in textOptions)) {
+      textOptions.fontSize = DEFAULT_SVG_FONT_SIZE;
+    }
+    let text;
+    const paths = element.getElementsByTagName('textPath');
+    if (paths.length) {
+      text = this._fromTextPath(paths[0], textOptions, parsedAttributes);
+    } else {
+      text = this._fromTextSpan(element, textOptions, parsedAttributes);
+    }
+    return text;
+  }
+  static _findSvgTextPath(element, id) {
+    const svg = element.closest('svg');
+    return svg.querySelector(id);
+  }
+  static _fromTextSpan(element, options, parsedAttributes) {
+    var textContent = '';
+    var parsedAnchor = parsedAttributes.textAnchor || 'left';
+    // 是否需要根据tspan位置计算对齐
+    let calcHorAlign = !parsedAttributes.textAnchor;
+    let calcAdjustHorAlign = '';
+
+    // The XML is not properly parsed in IE9 so a workaround to get
+    // textContent is through firstChild.data. Another workaround would be
+    // to convert XML loaded from a file to be converted using DOMParser (same way loadSVGFromString() does)
+
+    let lineCnt = 1;
+    let alignmentBaseline = 'auto';
+    let spanOffX = 0,
+      minSpanX = null,
+      spanOffY = 0;
+    if (element.hasAttribute('line-height')) {
+      options.lineHeight = parseFloat(element.getAttribute('line-height'));
+    } else if (options['line-height']) {
+      // 从style 转换过来
+      options.lineHeight = parseFloat(options['line-height']) / 100;
+    } else {
+      options.lineHeight = 1;
+    }
+    if (!('textContent' in element)) {
+      if ('firstChild' in element && element.firstChild !== null) {
+        if ('data' in element.firstChild && element.firstChild.data !== null) {
+          textContent = element.firstChild.data;
+        }
+      }
+    } else {
+      textContent = element.textContent;
+      let spans = element.getElementsByTagName('tspan');
+      if (spans.length > 0) {
+        // 多行文字
+        let lines = [],
+          lineText = '',
+          curLineLeft = 0,
+          // 本行的 水平方向位置
+          preSpanTop = 0,
+          // 前一个tspan的 垂直方向位置
+          sumDx = 0,
+          sumDy = 0;
+        for (let i = 0; i < spans.length; i++) {
+          var parsedSpanAttributes = parseAttributes(spans[i], Textbox.ATTRIBUTE_NAMES);
+          sumDx += Number(parsedSpanAttributes.dx) || 0;
+          sumDy += Number(parsedSpanAttributes.dy) || 0;
+          // 在使用tspan判断对齐时spanX取最小的值
+          if ('left' in parsedSpanAttributes) {
+            let spanX = parseFloat(parsedSpanAttributes.left);
+            minSpanX = minSpanX != null ? Math.min(minSpanX, spanX) : spanX;
+          }
+          // 现在多个tspan用多行文字, 所以对齐和位置只处理第一个 tspan
+          if (i === 0) {
+            if (spans[i].hasAttribute('text-anchor')) {
+              // 水平方向
+              let anchor = spans[i].getAttribute('text-anchor');
+              // left | center | right
+              // start | middle | end
+              if (anchor === 'middle') {
+                parsedAnchor = 'center';
+              } else if (anchor === 'end') {
+                parsedAnchor = 'right';
+              }
+              calcHorAlign = false;
+            }
+            if (spans[i].hasAttribute('alignment-baseline')) {
+              // 垂直方向
+              alignmentBaseline = spans[i].getAttribute('alignment-baseline');
+            }
+
+            // 处理tspan设置的位置和偏移
+            // top只处理第一行
+            if ('top' in parsedSpanAttributes) {
+              let spanY = parseFloat(parsedSpanAttributes.top);
+              spanY += sumDy;
+              spanOffY = options.top - spanY;
+            }
+          }
+
+          // 多个tspan可能在一行 根据 y position判断是否换行
+          // 另外没有对齐方式的，计算判断对齐方式，根据left的值判断对齐方式
+          parsedSpanAttributes.left = Number(parsedSpanAttributes.left || 0) + sumDx;
+          parsedSpanAttributes.top = Number(parsedSpanAttributes.top || 0) + sumDy;
+          if (i === 0 || preSpanTop === parsedSpanAttributes.top) {
+            lineText += spans[i].textContent;
+            if (i === 0) {
+              curLineLeft = Number(parsedSpanAttributes.left || 0);
+            }
+          } else {
+            lines.push({
+              text: lineText,
+              left: curLineLeft
+            });
+            lineText = spans[i].textContent;
+            curLineLeft = Number(parsedSpanAttributes.left || 0);
+          }
+
+          // 记住上一个span的Y位置
+          preSpanTop = parsedSpanAttributes.top;
+        }
+        // 加上最后一行
+        if (lineText.length) {
+          lines.push({
+            text: lineText,
+            left: curLineLeft
+          });
+        }
+        // 加上换行符号
+        textContent = lines.map(v => v.text).join('\n');
+        lineCnt = lines.length;
+        if (calcHorAlign) {
+          if (lines.some(v => v.left !== curLineLeft)) {
+            // 取最left的最小值,和right最大值
+            let minLeft = lines[0].left,
+              maxRight = lines[0].left,
+              maxWidth = 0,
+              minCenter = null,
+              maxCenter = null,
+              maxChar = 0,
+              maxCharIdx = 0;
+            lines.forEach((v, idx) => {
+              minLeft = Math.min(minLeft, v.left);
+              v.width = new Textbox(v.text, options).calcTextWidth();
+              v.right = v.left + (v.width || 0);
+              maxRight = Math.max(maxRight, v.right);
+              maxWidth = Math.max(maxWidth, v.width || 0);
+              if (v.width) {
+                const center = v.left + (v.width || 0) / 2;
+                minCenter = minCenter ? Math.min(minCenter, center) : center;
+                maxCenter = maxCenter ? Math.max(maxCenter, center) : center;
+                if (v.text.length > maxChar) {
+                  maxChar = v.text.length;
+                  maxCharIdx = idx;
+                }
+              }
+            });
+            let leftGap = 0,
+              rightGap = 0;
+            lines.forEach(v => {
+              leftGap = Math.max(leftGap, (v.left || 0) - minLeft);
+              rightGap = Math.max(rightGap, maxRight - (v.right || 0));
+            });
+            // 计算中心点位置
+            if (maxCenter && minCenter) {
+              const centerOff = maxCenter - minCenter;
+              const onCharWidth = (lines[maxCharIdx].width || 0) / lines[maxCharIdx].text.length;
+              // 左边间距大于右边两倍 或者 中心点偏移超过1/2字符且右边间距小于1/3字符
+              if (leftGap / (rightGap || 1) > 2 && centerOff > onCharWidth / 2 && rightGap < onCharWidth / 3) {
+                calcAdjustHorAlign = 'right';
+              } else if (centerOff < onCharWidth / 2) {
+                calcAdjustHorAlign = 'center';
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 处理文字的水平偏移
+    spanOffX = options.left - (minSpanX || 0);
+
+    // textAlign保持和parsedAnchor一致
+    options.textAlign = parsedAnchor;
+
+    // 注释掉原来删除换行等符号的代码
+    //textContent = textContent.replace(/^\s+|\s+$|\n+/g, '').replace(/\s+/g, ' ');
+    var originalStrokeWidth = options.strokeWidth;
+    options.strokeWidth = 0;
+
+    // 导入时打开自动计算文字高度，否则文字高度和 Y 轴位置错误
+    Textbox.enableCalcTextHeight = true;
+    var text = new Textbox(textContent, options),
+      textOneLineHeight = text.height / lineCnt,
+      textHeightScaleFactor = text.getScaledHeight() / text.height,
+      lineHeightDiff = (textOneLineHeight + text.strokeWidth) * text.lineHeight - textOneLineHeight,
+      scaledDiff = lineHeightDiff * textHeightScaleFactor,
+      textHeight = text.getScaledHeight() / lineCnt + scaledDiff,
+      offX = 0,
+      offY = 0;
+
+    // 默认 alignment-baseline="before-edge" offY = 0
+    let offScale = 0;
+    if (alignmentBaseline === 'before-edge') {
+      // 这个是1.0 导出的偏移值，多行且间距设置大于1也会有变化
+      // 暂时这么处理， 以后再解决
+      offScale = 1.1;
+    } else if (alignmentBaseline === 'auto') {
+      // alignment-baseline="auto" 或者 没有设置
+      offScale = 0.02913333333;
+    }
+    if (offScale !== 0) {
+      offY = (textHeight - text.fontSize * (offScale + text._fontSizeFraction)) / text.lineHeight;
+    }
+
+    // 取消自动计算文字高度
+    Textbox.enableCalcTextHeight = false;
+    /*
+      Adjust positioning:
+        x/y attributes in SVG correspond to the bottom-left corner of text bounding box
+        fabric output by default at top, left.
+    */
+    const adjustOption = {};
+    // 源码中options.width总是等于svg的宽度, 之前是new Text不能编辑文字，宽度设置为svg宽度也无效
+    // 修改为 new fabric.Textbox，并且设置为计算的正确宽度
+    const originWidth = options.width;
+    let width = text.calcTextWidth();
+    // 有时候计算出来的大小是不对的， 可能是字体的原因， 导致TextBox自动换行了, 所以加i字符的宽度
+    const oneIWidth = new Textbox('i', options).calcTextWidth();
+    width += oneIWidth;
+    if (originWidth !== width) {
+      adjustOption.width = width;
+    }
+    if (calcAdjustHorAlign) {
+      // tspan 按字符分开计算的对齐
+      adjustOption.textAlign = calcAdjustHorAlign;
+    }
+
+    // 2021.1.29修改
+    // Vectr1.0导出的svg，需要处理水平居中或右对齐偏移
+    // Vectr2.0导出的是按照span位置判断的对齐不需要处理整个width的位置偏移， 但是需要处理 oneIWidth的位置偏移
+    const textAlign = calcAdjustHorAlign || parsedAnchor;
+    if (textAlign === 'center') {
+      offX = (parsedAnchor === 'center' ? width : oneIWidth) / 2;
+    } else if (textAlign === 'right') {
+      offX = parsedAnchor === 'right' ? width : oneIWidth;
+    }
+    text.set(_objectSpread2(_objectSpread2({}, adjustOption), {}, {
+      left: text.left - offX - spanOffX,
+      top: text.top - offY - spanOffY,
+      strokeWidth: typeof originalStrokeWidth !== 'undefined' ? originalStrokeWidth : 1
+    }));
+    return text;
+  }
 }
+_Textbox = Textbox;
 /**
  * Minimum width of textbox, in pixels.
  * @type Number
@@ -23350,7 +23913,62 @@ class Textbox extends IText {
 _defineProperty(Textbox, "type", 'Textbox');
 _defineProperty(Textbox, "textLayoutProperties", [...IText.textLayoutProperties, 'width']);
 _defineProperty(Textbox, "ownDefaults", textboxDefaultValues);
+// James modified 自动计算文字高度
+_defineProperty(Textbox, "enableCalcTextHeight", true);
+_defineProperty(Textbox, "_fromTextPath", (textPath, options, parsedAttributes) => {
+  var parsedAnchor = parsedAttributes.textAnchor || 'left';
+  var textPathParsedAttributes = parseAttributes(textPath, ['href', 'text-anchor', 'startOffset']);
+  if (textPathParsedAttributes.textAnchor) {
+    parsedAnchor = textPathParsedAttributes.textAnchor;
+  }
+  if (parsedAnchor === 'middle') {
+    parsedAnchor = 'center';
+  } else if (parsedAnchor === 'end') {
+    parsedAnchor = 'right';
+  }
+  options.textAlign = parsedAnchor;
+  var textContent = textPath.textContent;
+  var text = new _Textbox(textContent, options);
+  const href = textPathParsedAttributes.href;
+  if (href && href.startsWith('#')) {
+    const pathElement = _Textbox._findSvgTextPath(textPath, href);
+    if (pathElement) {
+      var pathParsedAttributes = parseAttributes(pathElement, Path.ATTRIBUTE_NAMES);
+      const path = new Path(pathParsedAttributes.d, _objectSpread2(_objectSpread2({}, pathParsedAttributes), {
+        strokeWidth: 1,
+        stroke: '#ff0000',
+        fill: null,
+        visible: false
+      }));
+      // 需要计算实际字体大小
+      _Textbox.enableCalcTextHeight = true;
+      const textHeight = new _Textbox('i', {
+        fontFamily: options.fontFamily,
+        fontSize: options.fontSize,
+        fontStyle: options.fontStyle,
+        fontWeight: options.fontWeight,
+        width: undefined,
+        height: undefined
+      }).height || 20;
+      text.set({
+        width: (path.width || 0) + textHeight * 2,
+        height: (path.height || 0) + textHeight * 2,
+        path,
+        pathType: 'custom'
+      });
+      // 取消自动计算文字高度
+      _Textbox.enableCalcTextHeight = false;
+    }
+  }
+  // 设置位置中心点为左上角
+  text.set({
+    left: options.left - (text.width || 0) / 2,
+    top: options.top - (text.height || 0) / 2
+  });
+  return text;
+});
 classRegistry.setClass(Textbox);
+classRegistry.setSVGClass(Textbox);
 
 /**
  * Layout will adjust the bounding box to match the clip path bounding box.
@@ -25070,8 +25688,9 @@ function getCSSRules(doc) {
           return pair.trim();
         });
       for (i = 0, len = propertyValuePairs.length; i < len; i++) {
-        const pair = propertyValuePairs[i].split(':'),
-          property = pair[0].trim(),
+        const pair = propertyValuePairs[i].split(':');
+        if (pair.length < 2) return;
+        const property = pair[0].trim(),
           value = pair[1].trim();
         ruleObj[property] = value;
       }
@@ -25088,7 +25707,76 @@ function getCSSRules(doc) {
   return allRules;
 }
 
-const findTag = el => classRegistry.getSVGClass(getTagName(el).toLowerCase());
+/**
+ * Parse all pattern found in it
+ * @param {*} doc
+ */
+function getPatternDefs(doc) {
+  var tagArray = ["pattern"],
+    elList = getMultipleNodes(doc, tagArray),
+    el,
+    j = 0;
+  const patternDefs = {};
+  j = elList.length;
+  while (j--) {
+    el = elList[j];
+    const id = el.getAttribute("id");
+    if (id) {
+      var elNew = parsePattern(doc, el);
+      if (elNew) {
+        patternDefs[id] = elNew;
+      }
+    }
+  }
+  return patternDefs;
+}
+
+/**
+ * parse pattern
+ * @param {*} doc
+ * @param {*} el
+ */
+function parsePattern(doc, el) {
+  var svgToPattern = function (node, parentTransform) {
+    if (node.nodeType === 3) return;
+    var nodeTranform = node.getAttribute(node.nodeName === "pattern" ? "patternTransform" : "transform") || "";
+    var transformMatrix = parseTransformAttribute(nodeTranform);
+    parentTransform = multiplyTransformMatrices(parentTransform, transformMatrix);
+
+    /**
+     * 解析子节点
+     * @param node 
+     */
+    const parseChildNodes = node => {
+      for (var i = 0; i < node.childNodes.length; i++) {
+        const child = node.childNodes[i];
+        if (child instanceof Element) svgToPattern(child, parentTransform);
+      }
+    };
+    // switch 直接用它的子节点
+    if (node.nodeName == "switch") {
+      parseChildNodes(node);
+    } else if (node.nodeName === "g" || node.nodeName === "pattern") {
+      parseChildNodes(node);
+    } else if (node.nodeName === "clipPath") ; else if (node.nodeName === "image") {
+      patternNode = {
+        source: node.getAttribute("xlink:href"),
+        patternTransform: parentTransform
+      };
+    }
+  };
+  // 开始解析SVG
+  var patternNode,
+    parentTransform = [1, 0, 0, 1, 0, 0];
+  svgToPattern(el, parentTransform);
+  return patternNode;
+}
+
+const findTag = el => {
+  let tagName = getTagName(el).toLowerCase();
+  if (tagName === 'text') tagName = 'textbox';
+  return classRegistry.getSVGClass(tagName);
+};
 class ElementsParser {
   constructor(elements, options, reviver, doc, clipPaths) {
     this.elements = elements;
@@ -25098,6 +25786,7 @@ class ElementsParser {
     this.doc = doc;
     this.clipPaths = clipPaths;
     this.gradientDefs = getGradientDefs(doc);
+    this.patternDefs = getPatternDefs(doc);
     this.cssRules = getCSSRules(doc);
   }
   parse() {
@@ -25108,6 +25797,8 @@ class ElementsParser {
     if (klass) {
       const obj = await klass.fromElement(el, this.options, this.cssRules);
       this.resolveGradient(obj, el, FILL);
+      // James modified
+      this.resolvePattern(obj, el, FILL);
       this.resolveGradient(obj, el, STROKE);
       if (obj instanceof FabricImage && obj._originalElement) {
         removeTransformMatrixForSvgParsing(obj, obj.parsePreserveAspectRatioAttribute());
@@ -25145,6 +25836,20 @@ class ElementsParser {
     }
   }
 
+  /**
+   * James modified
+   * @param {*} obj
+   * @param {*} el
+   * @param {*} property
+   */
+  resolvePattern(obj, el, property) {
+    var patternDef = this.extractPropertyDefinition(obj, property, this.patternDefs);
+    if (patternDef) {
+      var pattern = new Pattern(patternDef);
+      obj.set(property, pattern);
+    }
+  }
+
   // TODO: resolveClipPath could be run once per clippath with minor work per object.
   // is a refactor that i m not sure is worth on this code
   async resolveClipPath(obj, usingElement, exactOwner) {
@@ -25156,6 +25861,16 @@ class ElementsParser {
       while (!exactOwner && clipPathOwner.parentElement && clipPathOwner.getAttribute('clip-path') !== obj.clipPath) {
         clipPathOwner = clipPathOwner.parentElement;
       }
+
+      // James modified
+      // 把 ClipPath 节点移出clipPathOwner, 避免重复解析clipPath 并造成 Maximum call stack size
+      // 但是这个操作导致了 clipPath的父节点的矩阵在调用fabric.parseAttributes没有乘到clipPath上
+      // 通常矩阵是 svg > g > clipPath > path, 这样的话变成了 svg > clipPath > path
+      // 因此把 下面的移出操作放到创建path(klass.fromElement)之后
+      // clipPathOwner.parentNode.appendChild(clipPathTag);
+
+      // 暂时通过修改 clipPath的transform处理
+      if (clipPathOwner.hasAttribute('transform')) clipPathTag.setAttribute('transform', clipPathOwner.getAttribute('transform'));
       // move the clipPath tag as sibling to the real element that is using it
       clipPathOwner.parentElement.appendChild(clipPathTag);
 
@@ -25337,251 +26052,6 @@ function loadSVGFromURL(url, reviver) {
     return createEmptyResponse();
   });
 }
-
-const ACTION_NAME$1 = MODIFY_POLY;
-/**
- * This function locates the controls.
- * It'll be used both for drawing and for interaction.
- */
-const createPolyPositionHandler = pointIndex => {
-  return function (dim, finalMatrix, polyObject) {
-    const {
-      points,
-      pathOffset
-    } = polyObject;
-    return new Point(points[pointIndex]).subtract(pathOffset).transform(multiplyTransformMatrices(polyObject.getViewportTransform(), polyObject.calcTransformMatrix()));
-  };
-};
-
-/**
- * This function defines what the control does.
- * It'll be called on every mouse move after a control has been clicked and is being dragged.
- * The function receives as argument the mouse event, the current transform object
- * and the current position in canvas coordinate `transform.target` is a reference to the
- * current object being transformed.
- */
-const polyActionHandler = (eventData, transform, x, y) => {
-  const {
-    target,
-    pointIndex
-  } = transform;
-  const poly = target;
-  const mouseLocalPosition = sendPointToPlane(new Point(x, y), undefined, poly.calcOwnMatrix());
-  poly.points[pointIndex] = mouseLocalPosition.add(poly.pathOffset);
-  poly.setDimensions();
-  return true;
-};
-
-/**
- * Keep the polygon in the same position when we change its `width`/`height`/`top`/`left`.
- */
-const factoryPolyActionHandler = (pointIndex, fn) => {
-  return function (eventData, transform, x, y) {
-    const poly = transform.target,
-      anchorPoint = new Point(poly.points[(pointIndex > 0 ? pointIndex : poly.points.length) - 1]),
-      anchorPointInParentPlane = anchorPoint.subtract(poly.pathOffset).transform(poly.calcOwnMatrix()),
-      actionPerformed = fn(eventData, _objectSpread2(_objectSpread2({}, transform), {}, {
-        pointIndex
-      }), x, y);
-    const newAnchorPointInParentPlane = anchorPoint.subtract(poly.pathOffset).transform(poly.calcOwnMatrix());
-    const diff = newAnchorPointInParentPlane.subtract(anchorPointInParentPlane);
-    poly.left -= diff.x;
-    poly.top -= diff.y;
-    return actionPerformed;
-  };
-};
-const createPolyActionHandler = pointIndex => wrapWithFireEvent(ACTION_NAME$1, factoryPolyActionHandler(pointIndex, polyActionHandler));
-function createPolyControls(arg0) {
-  let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  const controls = {};
-  for (let idx = 0; idx < (typeof arg0 === 'number' ? arg0 : arg0.points.length); idx++) {
-    controls["p".concat(idx)] = new Control(_objectSpread2({
-      actionName: ACTION_NAME$1,
-      positionHandler: createPolyPositionHandler(idx),
-      actionHandler: createPolyActionHandler(idx)
-    }, options));
-  }
-  return controls;
-}
-
-const ACTION_NAME = 'modifyPath';
-const calcPathPointPosition = (pathObject, commandIndex, pointIndex) => {
-  const {
-    path,
-    pathOffset
-  } = pathObject;
-  const command = path[commandIndex];
-  return new Point(command[pointIndex] - pathOffset.x, command[pointIndex + 1] - pathOffset.y).transform(multiplyTransformMatrices(pathObject.getViewportTransform(), pathObject.calcTransformMatrix()));
-};
-const movePathPoint = (pathObject, x, y, commandIndex, pointIndex) => {
-  const {
-    path,
-    pathOffset
-  } = pathObject;
-  const anchorCommand = path[(commandIndex > 0 ? commandIndex : path.length) - 1];
-  const anchorPoint = new Point(anchorCommand[pointIndex], anchorCommand[pointIndex + 1]);
-  const anchorPointInParentPlane = anchorPoint.subtract(pathOffset).transform(pathObject.calcOwnMatrix());
-  const mouseLocalPosition = sendPointToPlane(new Point(x, y), undefined, pathObject.calcOwnMatrix());
-  path[commandIndex][pointIndex] = mouseLocalPosition.x + pathOffset.x;
-  path[commandIndex][pointIndex + 1] = mouseLocalPosition.y + pathOffset.y;
-  pathObject.setDimensions();
-  const newAnchorPointInParentPlane = anchorPoint.subtract(pathObject.pathOffset).transform(pathObject.calcOwnMatrix());
-  const diff = newAnchorPointInParentPlane.subtract(anchorPointInParentPlane);
-  pathObject.left -= diff.x;
-  pathObject.top -= diff.y;
-  pathObject.set('dirty', true);
-  return true;
-};
-
-/**
- * This function locates the controls.
- * It'll be used both for drawing and for interaction.
- */
-function pathPositionHandler(dim, finalMatrix, pathObject) {
-  const {
-    commandIndex,
-    pointIndex
-  } = this;
-  return calcPathPointPosition(pathObject, commandIndex, pointIndex);
-}
-
-/**
- * This function defines what the control does.
- * It'll be called on every mouse move after a control has been clicked and is being dragged.
- * The function receives as argument the mouse event, the current transform object
- * and the current position in canvas coordinate `transform.target` is a reference to the
- * current object being transformed.
- */
-function pathActionHandler(eventData, transform, x, y) {
-  const {
-    target
-  } = transform;
-  const {
-    commandIndex,
-    pointIndex
-  } = this;
-  const actionPerformed = movePathPoint(target, x, y, commandIndex, pointIndex);
-  {
-    fireEvent(this.actionName, _objectSpread2(_objectSpread2({}, commonEventInfo(eventData, transform, x, y)), {}, {
-      commandIndex,
-      pointIndex
-    }));
-  }
-  return actionPerformed;
-}
-const indexFromPrevCommand = previousCommandType => previousCommandType === 'C' ? 5 : previousCommandType === 'Q' ? 3 : 1;
-class PathPointControl extends Control {
-  constructor(options) {
-    super(options);
-  }
-  render(ctx, left, top, styleOverride, fabricObject) {
-    const overrides = _objectSpread2(_objectSpread2({}, styleOverride), {}, {
-      cornerColor: this.controlFill,
-      cornerStrokeColor: this.controlStroke,
-      transparentCorners: !this.controlFill
-    });
-    super.render(ctx, left, top, overrides, fabricObject);
-  }
-}
-class PathControlPointControl extends PathPointControl {
-  constructor(options) {
-    super(options);
-  }
-  render(ctx, left, top, styleOverride, fabricObject) {
-    const {
-      path
-    } = fabricObject;
-    const {
-      commandIndex,
-      pointIndex,
-      connectToCommandIndex,
-      connectToPointIndex
-    } = this;
-    ctx.save();
-    ctx.strokeStyle = this.controlStroke;
-    if (this.connectionDashArray) {
-      ctx.setLineDash(this.connectionDashArray);
-    }
-    const [commandType] = path[commandIndex];
-    const point = calcPathPointPosition(fabricObject, connectToCommandIndex, connectToPointIndex);
-    if (commandType === 'Q') {
-      // one control point connects to 2 points
-      const point2 = calcPathPointPosition(fabricObject, commandIndex, pointIndex + 2);
-      ctx.moveTo(point2.x, point2.y);
-      ctx.lineTo(left, top);
-    } else {
-      ctx.moveTo(left, top);
-    }
-    ctx.lineTo(point.x, point.y);
-    ctx.stroke();
-    ctx.restore();
-    super.render(ctx, left, top, styleOverride, fabricObject);
-  }
-}
-const createControl = (commandIndexPos, pointIndexPos, isControlPoint, options, connectToCommandIndex, connectToPointIndex) => new (isControlPoint ? PathControlPointControl : PathPointControl)(_objectSpread2(_objectSpread2({
-  commandIndex: commandIndexPos,
-  pointIndex: pointIndexPos,
-  actionName: ACTION_NAME,
-  positionHandler: pathPositionHandler,
-  actionHandler: pathActionHandler,
-  connectToCommandIndex,
-  connectToPointIndex
-}, options), isControlPoint ? options.controlPointStyle : options.pointStyle));
-function createPathControls(path) {
-  let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  const controls = {};
-  let previousCommandType = 'M';
-  path.path.forEach((command, commandIndex) => {
-    const commandType = command[0];
-    if (commandType !== 'Z') {
-      controls["c_".concat(commandIndex, "_").concat(commandType)] = createControl(commandIndex, command.length - 2, false, options);
-    }
-    switch (commandType) {
-      case 'C':
-        controls["c_".concat(commandIndex, "_C_CP_1")] = createControl(commandIndex, 1, true, options, commandIndex - 1, indexFromPrevCommand(previousCommandType));
-        controls["c_".concat(commandIndex, "_C_CP_2")] = createControl(commandIndex, 3, true, options, commandIndex, 5);
-        break;
-      case 'Q':
-        controls["c_".concat(commandIndex, "_Q_CP_1")] = createControl(commandIndex, 1, true, options, commandIndex, 3);
-        break;
-    }
-    previousCommandType = commandType;
-  });
-  return controls;
-}
-
-var index = /*#__PURE__*/Object.freeze({
-  __proto__: null,
-  changeWidth: changeWidth,
-  createObjectDefaultControls: createObjectDefaultControls,
-  createPathControls: createPathControls,
-  createPolyActionHandler: createPolyActionHandler,
-  createPolyControls: createPolyControls,
-  createPolyPositionHandler: createPolyPositionHandler,
-  createResizeControls: createResizeControls,
-  createTextboxDefaultControls: createTextboxDefaultControls,
-  dragHandler: dragHandler,
-  factoryPolyActionHandler: factoryPolyActionHandler,
-  getLocalPoint: getLocalPoint,
-  polyActionHandler: polyActionHandler,
-  renderCircleControl: renderCircleControl,
-  renderSquareControl: renderSquareControl,
-  rotationStyleHandler: rotationStyleHandler,
-  rotationWithSnapping: rotationWithSnapping,
-  scaleCursorStyleHandler: scaleCursorStyleHandler,
-  scaleOrSkewActionName: scaleOrSkewActionName,
-  scaleSkewCursorStyleHandler: scaleSkewCursorStyleHandler,
-  scalingEqually: scalingEqually,
-  scalingX: scalingX,
-  scalingXOrSkewingY: scalingXOrSkewingY,
-  scalingY: scalingY,
-  scalingYOrSkewingX: scalingYOrSkewingX,
-  skewCursorStyleHandler: skewCursorStyleHandler,
-  skewHandlerX: skewHandlerX,
-  skewHandlerY: skewHandlerY,
-  wrapWithFireEvent: wrapWithFireEvent,
-  wrapWithFixedAnchor: wrapWithFixedAnchor
-});
 
 const isWebGLPipelineState = options => {
   return options.webgl !== undefined;
