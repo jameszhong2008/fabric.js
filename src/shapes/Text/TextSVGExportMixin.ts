@@ -9,6 +9,7 @@ import { type TextStyleDeclaration } from './StyledText';
 import { JUSTIFY } from '../Text/constants';
 import type { FabricText } from './Text';
 import { STROKE, FILL } from '../../constants';
+import { Path } from '../Path';
 
 const multipleSpacesRegex = /  +/g;
 const dblQuoteRegex = /"/g;
@@ -25,8 +26,13 @@ function createSVGInlineRect(
 
 export class TextSVGExportMixin extends FabricObjectSVGExportMixin {
   _toSVG(this: TextSVGExportMixin & FabricText): string[] {
-    const offsets = this._getSVGLeftTopOffsets(),
+    const offsets = this._getSVGLeftTopOffsets();
+    let textAndBg;
+    if (this.path) {
+      textAndBg = this._getTextPath();
+    } else {
       textAndBg = this._getSVGTextAndBg(offsets.textTop, offsets.textLeft);
+    }
     return this._wrapSVGTextAndBg(textAndBg);
   }
 
@@ -36,6 +42,49 @@ export class TextSVGExportMixin extends FabricObjectSVGExportMixin {
       noStyle: true,
       withShadow: true,
     });
+  }
+
+  private _getTextPath(this: TextSVGExportMixin & FabricText) {
+    const textSpans: string[] = [];
+    const textBgRects: string[] = [];
+    const content = this._textLines.map((v) => v.join('')).join('');
+
+    let visibleContent = '';
+    // 隐藏状态的文字 __charBounds 为空
+    if (this.__charBounds.length) {
+      Array.from(content).forEach((c, i) => {
+        const charBox = this.__charBounds[0][i];
+        if (!charBox || !charBox.visible) return;
+        visibleContent += c;
+      });
+    }
+
+    const align: string[] = [];
+    const alignMap: { [key: string]: { anchor: string; offset: string } } = {
+      center: { anchor: 'middle', offset: '50%' },
+      right: { anchor: 'end', offset: '100%' },
+    };
+    if (this.textAlign === 'center' || this.textAlign === 'right') {
+      align.push(
+        `text-anchor="${alignMap[this.textAlign].anchor}" `,
+        `startOffset="${alignMap[this.textAlign].offset}" `,
+      );
+    }
+
+    const pathId = `TEXTPATH_${this.id}`;
+    const textPath = [
+      `<textPath href="#${pathId}" `,
+      align.join(''),
+      '>',
+      escapeXml(visibleContent),
+      '</textPath>',
+    ].join('');
+
+    textSpans.push(textPath);
+    return {
+      textSpans,
+      textBgRects,
+    };
   }
 
   private _getSVGLeftTopOffsets(this: TextSVGExportMixin & FabricText) {
@@ -67,6 +116,13 @@ export class TextSVGExportMixin extends FabricObjectSVGExportMixin {
       this.fontSize ? `font-size="${this.fontSize}" ` : '',
       this.fontStyle ? `font-style="${this.fontStyle}" ` : '',
       this.fontWeight ? `font-weight="${this.fontWeight}" ` : '',
+      // James modified
+      // 增加 letter-space line-height textalign，用于 Vectr2.0导入
+      this.charSpacing
+        ? 'letter-spacing="' + this._getWidthOfCharSpacing() + '" '
+        : '',
+      // svg 暂时不支持该属性，只能用于 Vectr2.0导入
+      this.lineHeight ? 'line-height="' + this.lineHeight + '" ' : '',
       textDecoration ? `text-decoration="${textDecoration}" ` : '',
       this.direction === 'rtl' ? `direction="${this.direction}" ` : '',
       'style="',
@@ -109,6 +165,15 @@ export class TextSVGExportMixin extends FabricObjectSVGExportMixin {
 
     // text and text-background
     for (let i = 0, len = this._textLines.length; i < len; i++) {
+      // James modified
+      let heightOfLine = this.getHeightOfLine(i);
+      let realHeightOfLine = heightOfLine / this.lineHeight;
+
+      // 2022.3.1 超过box高度，不显示 text
+      if (height + realHeightOfLine * 0.8 > this.height / 2) {
+        break;
+      }
+
       lineOffset = this._getLineLeftOffset(i);
       if (this.direction === 'rtl') {
         lineOffset += this.width;
@@ -127,7 +192,7 @@ export class TextSVGExportMixin extends FabricObjectSVGExportMixin {
         textLeftOffset + lineOffset,
         height,
       );
-      height += this.getHeightOfLine(i);
+      height += heightOfLine;
     }
 
     return {
@@ -159,7 +224,9 @@ export class TextSVGExportMixin extends FabricObjectSVGExportMixin {
       config.NUM_FRACTION_DIGITS,
     )}" ${dySpan}${fillStyles}>${escapeXml(char)}</tspan>`;
   }
-
+  /**
+   * James modified
+   */
   private _setSVGTextLineText(
     this: TextSVGExportMixin & FabricText,
     textSpans: string[],
@@ -180,6 +247,16 @@ export class TextSVGExportMixin extends FabricObjectSVGExportMixin {
 
     textTopOffset +=
       (lineHeight * (1 - this._fontSizeFraction)) / this.lineHeight;
+
+    // James modified
+    // 空行增加空tspan用于 Vectr2.0导入时表示空行
+    if (line.length === 0) {
+      style = {};
+      textSpans.push(
+        this._createTextCharSpan('', style, textLeftOffset, textTopOffset),
+      );
+    }
+
     for (let i = 0, len = line.length - 1; i <= len; i++) {
       timeToRender = i === len || this.charSpacing;
       charsToRender += line[i];
@@ -200,7 +277,8 @@ export class TextSVGExportMixin extends FabricObjectSVGExportMixin {
         actualStyle =
           actualStyle || this.getCompleteStyleDeclaration(lineIndex, i);
         nextStyle = this.getCompleteStyleDeclaration(lineIndex, i + 1);
-        timeToRender = hasStyleChanged(actualStyle, nextStyle, true);
+        // James modified forTextSpan = false
+        timeToRender = hasStyleChanged(actualStyle, nextStyle, false);
       }
       if (timeToRender) {
         style = this._getStyleDeclaration(lineIndex, i);

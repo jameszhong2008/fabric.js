@@ -1,6 +1,7 @@
 import type { CSSRules } from './typedefs';
 
 /**
+ * James modify 修复 5.3版本 导入text SVG bug 在42行没有判断split后数组是否为空
  * Returns CSS rules for a given SVG document
  * @param {HTMLElement} doc SVG document to parse
  * @return {Object} CSS rules of this document
@@ -40,8 +41,10 @@ export function getCSSRules(doc: Document) {
           return;
         }
 
-        const match = rule.split('{'),
-          ruleObj: Record<string, string> = {},
+        const match = rule.split('{');
+        // 修复 5.3版本 导入text SVG bug 在42行没有判断split后数组是否为空
+        if (!match[1]) return;
+        const ruleObj: Record<string, string> = {},
           declaration = match[1].trim(),
           propertyValuePairs = declaration.split(';').filter(function (pair) {
             return pair.trim();

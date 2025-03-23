@@ -44,6 +44,7 @@ import type { StaticCanvasOptions } from './StaticCanvasOptions';
 import { staticCanvasDefaults } from './StaticCanvasOptions';
 import { log, FabricError } from '../util/internals/console';
 import { getDevicePixelRatio } from '../env';
+import { FabricText } from 'fabric/node';
 
 /**
  * Having both options in TCanvasSizeOptions set to true transform the call in a calcOffset
@@ -1073,8 +1074,44 @@ export class StaticCanvas<
       this.createSVGFontFacesMarkup(),
       this.createSVGRefElementsMarkup(),
       this.createSVGClipPathMarkup(options),
+      // James add
+      this._createPathForText(),
       '</defs>\n',
     );
+  }
+
+  /**
+   * James add this method for exporting text path
+   */
+  _createPathForText() {
+    var pathMarkups = [];
+    var instance,
+      i,
+      len,
+      objects = this._objects;
+    for (i = 0, len = objects.length; i < len; i++) {
+      instance = objects[i];
+      if (instance.excludeFromExport) {
+        continue;
+      }
+      if (!(instance instanceof FabricText) || !instance.path) {
+        continue;
+      }
+      var pathId = `TEXTPATH_${uid()}`;
+      var pathMarkup = instance.path._toSVG();
+      var index = pathMarkup.indexOf('COMMON_PARTS');
+      // 加上id, 和路径偏移
+      pathMarkup[index] = [
+        'id="' + pathId + '" ',
+        'transform="translate(' +
+          -instance.path.pathOffset.x +
+          ',' +
+          -instance.path.pathOffset.y +
+          ')" ',
+      ].join('');
+      pathMarkups.push(pathMarkup.join(''));
+    }
+    return pathMarkups.join('\n');
   }
 
   createSVGClipPathMarkup(options: TSVGExportOptions): string {
