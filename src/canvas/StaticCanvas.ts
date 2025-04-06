@@ -44,7 +44,6 @@ import type { StaticCanvasOptions } from './StaticCanvasOptions';
 import { staticCanvasDefaults } from './StaticCanvasOptions';
 import { log, FabricError } from '../util/internals/console';
 import { getDevicePixelRatio } from '../env';
-import { FabricText } from 'fabric/node';
 
 /**
  * Having both options in TCanvasSizeOptions set to true transform the call in a calcOffset
@@ -1081,11 +1080,11 @@ export class StaticCanvas<
   }
 
   /**
-   * James add this method for exporting text path
+   * James added this method for exporting text path
    */
   _createPathForText() {
-    var pathMarkups = [];
-    var instance,
+    const pathMarkups: string[] = [];
+    let instance,
       i,
       len,
       objects = this._objects;
@@ -1094,12 +1093,13 @@ export class StaticCanvas<
       if (instance.excludeFromExport) {
         continue;
       }
-      if (!(instance instanceof FabricText) || !instance.path) {
+
+      if (!isTextObject(instance) || !instance.path) {
         continue;
       }
-      var pathId = `TEXTPATH_${uid()}`;
-      var pathMarkup = instance.path._toSVG();
-      var index = pathMarkup.indexOf('COMMON_PARTS');
+      let pathId = `TEXTPATH_${uid()}`;
+      let pathMarkup = instance.path._toSVG();
+      let index = pathMarkup.indexOf('COMMON_PARTS');
       // 加上id, 和路径偏移
       pathMarkup[index] = [
         'id="' + pathId + '" ',

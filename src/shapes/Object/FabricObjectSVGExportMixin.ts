@@ -4,6 +4,7 @@ import { colorPropToSVG, matrixToSVG } from '../../util/misc/svgParsing';
 import { FILL, NONE, STROKE } from '../../constants';
 import type { FabricObject } from './FabricObject';
 import { isFiller } from '../../util/typeAssertions';
+import { Pattern } from '../../Pattern';
 
 export class FabricObjectSVGExportMixin {
   /**
@@ -12,6 +13,11 @@ export class FabricObjectSVGExportMixin {
    * @type {String}
    */
   declare clipPathId?: string;
+
+  /**
+   * James added, 增加clipPathPattern属性，用于导出svg时 Pattern转Image对象
+   */
+  declare clipPathPattern?: FabricObject | null;
 
   /**
    * Returns styles-string for svg-export
@@ -34,8 +40,11 @@ export class FabricObjectSVGExportMixin {
       opacity = typeof this.opacity !== 'undefined' ? this.opacity : '1',
       visibility = this.visible ? '' : ' visibility: hidden;',
       filter = skipShadow ? '' : this.getSvgFilter(),
-      fill = colorPropToSVG(FILL, this.fill),
-      stroke = colorPropToSVG(STROKE, this.stroke);
+      // James modified, 非skipShadow 时候，fill和stroke都设置为白色
+      fill = skipShadow ? colorPropToSVG(FILL, this.fill) : 'fill: white;',
+      stroke = skipShadow
+        ? colorPropToSVG(STROKE, this.stroke)
+        : 'stroke:white;';
 
     return [
       stroke,
@@ -153,6 +162,58 @@ export class FabricObjectSVGExportMixin {
   }
 
   /**
+   * James added
+   * Returns pattern svg attributes string
+   * @return {String}
+   */
+  getPatternSvgCommons(
+    this: FabricObjectSVGExportMixin & FabricObject & { id?: string },
+  ) {
+    return [
+      this.id ? 'id="' + this.id + '_clip" ' : '',
+      this.clipPathPattern
+        ? 'clip-path="url(#' + this.clipPathPattern.clipPathId + ')" '
+        : '',
+    ].join('');
+  }
+
+  /**
+   * James added
+   * Returns id attribute for svg clippath output
+   * @return {String}
+   */
+  getSvgCommonsClipPath(
+    this: FabricObjectSVGExportMixin & FabricObject & { id?: string },
+  ) {
+    if (this.clipPathPattern) {
+      return [this.id ? 'id="' + this.id + '" ' : ''].join('');
+    } else {
+      return this.getSvgCommons();
+    }
+  }
+
+  /**
+   * James added
+   * 自定义clipPath的svg输出transform
+   * @param {*} full
+   * @param {*} additionalTransform
+   */
+  getSvgTransformClipPath(
+    this: FabricObjectSVGExportMixin & FabricObject,
+    full: boolean,
+    additionalTransform = '',
+  ) {
+    // 如果是pattern，就不需要transform
+    if (this.clipPathPattern) {
+      return additionalTransform
+        ? 'transform="' + additionalTransform + '" '
+        : '';
+    } else {
+      return this.getSvgTransform(full, additionalTransform);
+    }
+  }
+
+  /**
    * @private
    */
   _createBaseClipPathSVGMarkup(
@@ -164,8 +225,8 @@ export class FabricObjectSVGExportMixin {
     }: { reviver?: TSVGReviver; additionalTransform?: string } = {},
   ) {
     const commonPieces = [
-        this.getSvgTransform(true, additionalTransform),
-        this.getSvgCommons(),
+        this.getSvgTransformClipPath(true, additionalTransform),
+        this.getSvgCommonsClipPath(),
       ].join(''),
       // insert commons in the markup, style and svgCommons
       index = objectMarkup.indexOf('COMMON_PARTS');
@@ -191,9 +252,9 @@ export class FabricObjectSVGExportMixin {
       additionalTransform?: string;
     } = {},
   ): string {
+    let clipPath = this.clipPath as FabricObjectSVGExportMixin & FabricObject;
     const styleInfo = noStyle ? '' : `style="${this.getSvgStyles()}" `,
       shadowInfo = withShadow ? `style="${this.getSvgFilter()}" ` : '',
-      clipPath = this.clipPath as FabricObjectSVGExportMixin & FabricObject,
       vectorEffect = this.strokeUniform
         ? 'vector-effect="non-scaling-stroke" '
         : '',
@@ -204,7 +265,17 @@ export class FabricObjectSVGExportMixin {
       markup = [],
       // insert commons in the markup, style and svgCommons
       index = objectMarkup.indexOf('COMMON_PARTS');
-    let clipPathMarkup;
+    // James added
+    let commonPieces = '',
+      clipPathMarkup = '';
+
+    // 如果是pattern，就生成clipppath
+    // 使用 clipPathPattern区别是否是pattern
+    this.clipPathPattern = null;
+    if (fill instanceof Pattern) {
+      this.clipPathPattern = clipPath = this;
+    }
+    // James added end
     if (clipPath) {
       clipPath.clipPathId = `CLIPPATH_${uid()}`;
       clipPathMarkup = `<clipPath id="${
@@ -220,22 +291,45 @@ export class FabricObjectSVGExportMixin {
       !absoluteClipPath ? shadowInfo + this.getSvgCommons() : '',
       ' >\n',
     );
-    const commonPieces = [
+    commonPieces = [
       styleInfo,
       vectorEffect,
       noStyle ? '' : this.addPaintOrder(),
       ' ',
       additionalTransform ? `transform="${additionalTransform}" ` : '',
     ].join('');
+
+    // James added shadow 放在上面
+    if (shadow) {
+      const styleInfoWithShadow = 'style="' + this.getSvgStyles(false) + '" ';
+      const commonPiecesWithShadow = [
+        styleInfoWithShadow,
+        vectorEffect,
+        noStyle ? '' : this.addPaintOrder(),
+        ' ',
+        additionalTransform ? 'transform="' + additionalTransform + '" ' : '',
+      ].join('');
+      const objectMarkupCopy = JSON.parse(JSON.stringify(objectMarkup));
+      objectMarkupCopy[index] = commonPiecesWithShadow;
+
+      markup.push(objectMarkupCopy.join(''));
+      markup.push(shadow.toSVG(this));
+    }
+    // objectMarkup中是导出主对象(如path)的svg，index下标是style，放在commonPieces
     objectMarkup[index] = commonPieces;
     if (isFiller(fill)) {
+      // James added clipPattern apply pattern clip path just for fill.
+      if (this.clipPathPattern) {
+        markup.push('<g ', shadowInfo, this.getPatternSvgCommons(), ' >\n');
+      }
       markup.push(fill.toSVG(this));
+      // James added clipPattern
+      if (this.clipPathPattern) {
+        markup.push('</g>\n');
+      }
     }
     if (isFiller(stroke)) {
       markup.push(stroke.toSVG(this));
-    }
-    if (shadow) {
-      markup.push(shadow.toSVG(this));
     }
     if (clipPath) {
       markup.push(clipPathMarkup);

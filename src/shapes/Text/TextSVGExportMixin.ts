@@ -29,6 +29,7 @@ export class TextSVGExportMixin extends FabricObjectSVGExportMixin {
     const offsets = this._getSVGLeftTopOffsets();
     let textAndBg;
     if (this.path) {
+      // James added
       textAndBg = this._getTextPath();
     } else {
       textAndBg = this._getSVGTextAndBg(offsets.textTop, offsets.textLeft);
@@ -44,7 +45,14 @@ export class TextSVGExportMixin extends FabricObjectSVGExportMixin {
     });
   }
 
-  private _getTextPath(this: TextSVGExportMixin & FabricText) {
+  /**
+   * James added
+   * @param this
+   * @returns
+   */
+  private _getTextPath(
+    this: TextSVGExportMixin & FabricText & { id?: string },
+  ) {
     const textSpans: string[] = [];
     const textBgRects: string[] = [];
     const content = this._textLines.map((v) => v.join('')).join('');

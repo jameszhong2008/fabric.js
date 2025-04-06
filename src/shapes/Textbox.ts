@@ -105,7 +105,7 @@ export class Textbox<
   static ownDefaults = textboxDefaultValues;
 
   // James modified 自动计算文字高度
-  static enableCalcTextHeight = true;
+  static enableCalcTextHeight = false;
 
   /**
    * James modified 自动计算文字高度
@@ -166,11 +166,9 @@ export class Textbox<
       // once text is measured we need to make space fatter to make justified text.
       this.enlargeSpaces();
     }
-    // clear cache and re-calculate height
-    this.height = this.calcTextHeight();
-
     // James modified 取消 textbox 自动计算高度
     if (!this.path && Textbox.enableCalcTextHeight) {
+      // clear cache and re-calculate height
       this.height = this.calcTextHeight();
     }
   }
