@@ -26,7 +26,7 @@ import {
 } from '../util/animation/AnimationFrameProvider';
 import { runningAnimations } from '../util/animation/AnimationRegistry';
 import { uid } from '../util/internals/uid';
-import { createCanvasElementFor, toDataURL } from '../util/misc/dom';
+import { createCanvasElementFor, toBlob, toDataURL } from '../util/misc/dom';
 import { invertTransform, transformPoint } from '../util/misc/matrix';
 import type { EnlivenObjectOptions } from '../util/misc/objectEnlive';
 import {
@@ -34,7 +34,7 @@ import {
   enlivenObjects,
 } from '../util/misc/objectEnlive';
 import { pick } from '../util/misc/pick';
-import { matrixToSVG } from '../util/misc/svgParsing';
+import { matrixToSVG } from '../util/misc/svgExport';
 import { toFixed } from '../util/misc/toFixed';
 import { isFiller, isPattern, isTextObject } from '../util/typeAssertions';
 import { StaticCanvasDOMManager } from './DOMManagers/StaticCanvasDOMManager';
@@ -832,15 +832,14 @@ export class StaticCanvas<
    * this alias is provided because if you call JSON.stringify on an instance,
    * the toJSON object will be invoked if it exists.
    * Having a toJSON method means you can do JSON.stringify(myCanvas)
+   * JSON does not support additional properties because toJSON has its own signature
    * @return {Object} JSON compatible object
    * @tutorial {@link http://fabricjs.com/fabric-intro-part-3#serialization}
    * @see {@link http://jsfiddle.net/fabricjs/pec86/|jsFiddle demo}
-   * @example <caption>JSON without additional properties</caption>
-   * var json = canvas.toJSON();
-   * @example <caption>JSON with additional properties included</caption>
-   * var json = canvas.toJSON(['lockMovementX', 'lockMovementY', 'lockRotation', 'lockScalingX', 'lockScalingY']);
-   * @example <caption>JSON without default values</caption>
-   * var json = canvas.toJSON();
+   * @example <caption>JSON representation of canvas </caption>
+   * const json = canvas.toJSON();
+   * @example <caption>JSON representation of canvas </caption>
+   * const json = JSON.stringify(canvas);
    */
   toJSON() {
     return this.toObject();
@@ -1425,6 +1424,22 @@ export class StaticCanvas<
       multiplier * (enableRetinaScaling ? this.getRetinaScaling() : 1);
 
     return toDataURL(
+      this.toCanvasElement(finalMultiplier, options),
+      format,
+      quality,
+    );
+  }
+  toBlob(options = {} as TDataUrlOptions): Promise<Blob | null> {
+    const {
+      format = 'png',
+      quality = 1,
+      multiplier = 1,
+      enableRetinaScaling = false,
+    } = options;
+    const finalMultiplier =
+      multiplier * (enableRetinaScaling ? this.getRetinaScaling() : 1);
+
+    return toBlob(
       this.toCanvasElement(finalMultiplier, options),
       format,
       quality,

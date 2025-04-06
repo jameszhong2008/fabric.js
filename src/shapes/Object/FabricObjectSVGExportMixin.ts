@@ -1,10 +1,11 @@
 import type { TSVGReviver } from '../../typedefs';
 import { uid } from '../../util/internals/uid';
-import { colorPropToSVG, matrixToSVG } from '../../util/misc/svgParsing';
+import { colorPropToSVG } from '../../util/misc/svgParsing';
 import { FILL, NONE, STROKE } from '../../constants';
 import type { FabricObject } from './FabricObject';
 import { isFiller } from '../../util/typeAssertions';
 import { Pattern } from '../../Pattern';
+import { matrixToSVG } from '../../util/misc/svgExport';
 
 export class FabricObjectSVGExportMixin {
   /**

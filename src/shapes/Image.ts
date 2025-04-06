@@ -233,7 +233,7 @@ export class FabricImage<
     this._element = element;
     this._originalElement = element;
     this._setWidthHeight(size);
-    element.classList.add(FabricImage.CSS_CANVAS);
+    element.classList?.add(FabricImage.CSS_CANVAS);
     if (this.filters.length !== 0) {
       this.applyFilters();
     }
@@ -571,6 +571,7 @@ export class FabricImage<
       sourceWidth,
       sourceHeight,
       this._element as HTMLCanvasElement,
+      this.cacheKey,
     );
     if (
       this._originalElement.width !== this._element.width ||
@@ -609,11 +610,11 @@ export class FabricImage<
   }
 
   /**
-   * Decide if the object should cache or not. Create its own cache level
+   * Decide if the FabricImage should cache or not. Create its own cache level
    * needsItsOwnCache should be used when the object drawing method requires
-   * a cache step. None of the fabric classes requires it.
+   * a cache step.
    * Generally you do not cache objects in groups because the group outside is cached.
-   * This is the special image version where we would like to avoid caching where possible.
+   * This is the special Image version where we would like to avoid caching where possible.
    * Essentially images do not benefit from caching. They may require caching, and in that
    * case we do it. Also caching an image usually ends in a loss of details.
    * A full performance audit should be done.
@@ -759,7 +760,9 @@ export class FabricImage<
 
   /**
    * Default CSS class name for canvas
+   * Will be removed from fabric 7
    * @static
+   * @deprecated
    * @type String
    * @default
    */
@@ -778,6 +781,7 @@ export class FabricImage<
     'height',
     'preserveAspectRatio',
     'xlink:href',
+    'href',
     'crossOrigin',
     'image-rendering',
   ];
@@ -848,7 +852,7 @@ export class FabricImage<
       cssRules,
     );
     return this.fromURL(
-      parsedAttributes['xlink:href'],
+      parsedAttributes['xlink:href'] || parsedAttributes['href'],
       options,
       parsedAttributes,
     ).catch((err) => {
