@@ -51,6 +51,7 @@ import type { CanvasOptions } from './CanvasOptions';
 import { canvasDefaults } from './CanvasOptions';
 import { Intersection } from '../Intersection';
 import { isActiveSelection } from '../util/typeAssertions';
+import { Group } from '../shapes/Group';
 
 /**
  * Canvas class
@@ -195,6 +196,20 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
   declare isDrawingMode: boolean;
 
   declare preserveObjectStacking: boolean;
+
+  /**
+   * 启用双击锁定组对象，锁定后只能选择对象的子节点，无论group中interative和subTargetCheck是否启用
+   * @type Boolean
+   * @default
+   */
+  declare dblClickIsolateObject: boolean;
+
+  /**
+   * 双击锁定的节点, 目前只支持组节点
+   * @type Group | null
+   * @default
+   */
+  isolatedObject: Group | null;
 
   // event config
   declare stopContextMenu: boolean;
@@ -703,6 +718,45 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
   }
 
   /**
+   * 双击选择
+   * @param e
+   * @returns
+   */
+  dblClickLock(e: TPointerEvent): boolean {
+    if (this.dblClickIsolateObject) {
+      const pointer = this.getViewportPoint(e);
+      const objects = this.isolatedObject
+        ? this.isolatedObject.getObjects()
+        : this.getObjects();
+      const obj = this.searchPossibleTargets(objects, pointer);
+      if (obj) {
+        if (obj instanceof Group) {
+          // 组才修改锁定
+          this.isolatedObject = obj;
+          this.discardActiveObject();
+        } else {
+          // 非组对象不处理锁定，返回false继续对象自己的双击事件
+          return false;
+        }
+      } else {
+        // 取消锁定
+        this.isolatedObject = null;
+        this.discardActiveObject();
+      }
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * 返回搜索对象
+   * @returns
+   */
+  getSearchTargets() {
+    return this.isolatedObject ? this.isolatedObject._objects : this._objects;
+  }
+
+  /**
    * Method that determines what object we are clicking on
    * 11/09/2018 TODO: would be cool if findTarget could discern between being a full target
    * or the outside part of the corner.
@@ -740,7 +794,10 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
         } else {
           const subTargets = this.targets;
           this.targets = [];
-          const target = this.searchPossibleTargets(this._objects, pointer);
+          const target = this.searchPossibleTargets(
+            this.getSearchTargets(),
+            pointer,
+          );
           if (
             e[this.altSelectionKey as ModifierKey] &&
             target &&
@@ -756,7 +813,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
       }
     }
 
-    return this.searchPossibleTargets(this._objects, pointer);
+    return this.searchPossibleTargets(this.getSearchTargets(), pointer);
   }
 
   /**
@@ -850,7 +907,12 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
     while (i--) {
       const target = objects[i];
       if (this._checkTarget(target, pointer)) {
-        if (isCollection(target) && target.subTargetCheck) {
+        // 没有开启双击锁定节点才搜索子节点
+        if (
+          !this.dblClickIsolateObject &&
+          isCollection(target) &&
+          target.subTargetCheck
+        ) {
           const subTarget = this._searchPossibleTargets(
             target._objects as FabricObject[],
             pointer,

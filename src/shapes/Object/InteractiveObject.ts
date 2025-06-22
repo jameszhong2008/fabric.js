@@ -217,7 +217,7 @@ export class InteractiveFabricObject<
     pointer: Point,
     forTouch = false,
   ): { key: string; control: Control; coord: TOCoord } | undefined {
-    if (!this.hasControls || !this.canvas) {
+    if (!this.hasControls || !this.canvas || !this.oCoords) {
       return undefined;
     }
 

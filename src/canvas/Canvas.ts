@@ -557,9 +557,18 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
     const clicks = e.detail;
     if (clicks > 3 || clicks < 2) return;
     this._cacheTransformEventData(e);
-    clicks == 2 && e.type === 'dblclick' && this._handleEvent(e, 'dblclick');
+    clicks == 2 && e.type === 'dblclick' && this._onDblClick(e);
     clicks == 3 && this._handleEvent(e, 'tripleclick');
     this._resetTransformEventData();
+  }
+
+  /**
+   * 双击选择锁定组的子节点
+   * @param e
+   */
+  private _onDblClick(e: TPointerEvent) {
+    if (this.dblClickLock(e)) return;
+    this._handleEvent(e, 'dblclick');
   }
 
   /**
