@@ -211,6 +211,13 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
    */
   isolatedObject: Group | null;
 
+  /**
+   * 指定的搜索对象
+   * @type Boolean
+   * @default null
+   */
+  _searchTargets: FabricObject[] | null;
+
   // event config
   declare stopContextMenu: boolean;
   declare fireRightClick: boolean;
@@ -734,6 +741,10 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
           // 组才修改锁定
           this.isolatedObject = obj;
           this.discardActiveObject();
+          // 新创建的组对象，子节点coords初始化，否则无法选中
+          obj._objects.forEach((o) => {
+            o.setCoords();
+          });
         } else {
           // 非组对象不处理锁定，返回false继续对象自己的双击事件
           return false;
@@ -749,11 +760,23 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
   }
 
   /**
+   * 设置搜索对象
+   * 如当编辑path时，设置点为可搜索对象
+   * @param objects
+   */
+  setSearchTargets(objects: FabricObject[] | null) {
+    this._searchTargets = objects;
+  }
+
+  /**
    * 返回搜索对象
    * @returns
    */
   getSearchTargets() {
-    return this.isolatedObject ? this.isolatedObject._objects : this._objects;
+    return (
+      this._searchTargets ||
+      (this.isolatedObject ? this.isolatedObject._objects : this._objects)
+    );
   }
 
   /**
