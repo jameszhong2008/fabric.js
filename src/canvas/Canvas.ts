@@ -567,7 +567,12 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
    * @param e
    */
   private _onDblClick(e: TPointerEvent) {
-    if (this.dblClickLock(e)) return;
+    if (this.dblClickLock(e)) {
+      // 锁定后立即选中点击子对象
+      this.__onMouseDown(e);
+      this.__onMouseUp(e);
+      return;
+    }
     this._handleEvent(e, 'dblclick');
   }
 
@@ -1068,6 +1073,17 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       shouldRender = true;
     } else if (this._shouldClearSelection(e, target)) {
       this.discardActiveObject(e);
+
+      // 锁定对象时且没有指定选中时，如果点击组外空白或对象，取消锁定
+      if (this.isolatedObject && !this._searchTargets) {
+        this.setSearchTargets([this.isolatedObject]);
+        const target = this.findTarget(e);
+        // 没有选中任何对象，或者选中的是锁定对象以外的对象
+        if (target !== this.isolatedObject) {
+          this.isolatedObject = null;
+        }
+        this.setSearchTargets(null);
+      }
     }
     // we start a group selector rectangle if
     // selection is enabled
