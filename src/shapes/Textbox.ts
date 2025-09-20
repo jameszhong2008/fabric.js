@@ -1,4 +1,4 @@
-import type { TClassProperties, TOptions } from '../typedefs';
+import type { Abortable, TClassProperties, TOptions } from '../typedefs';
 import { IText } from './IText/IText';
 import { classRegistry } from '../ClassRegistry';
 import { createTextboxDefaultControls } from '../controls/commonControls';
@@ -6,8 +6,17 @@ import { JUSTIFY } from './Text/constants';
 import type { TextStyleDeclaration } from './Text/StyledText';
 import type { SerializedITextProps, ITextProps } from './IText/IText';
 import type { ITextEvents } from './IText/ITextBehavior';
-import type { TextLinesInfo } from './Text/Text';
+import type {
+  FabricText,
+  SerializedTextProps,
+  TextLinesInfo,
+} from './Text/Text';
 import type { Control } from '../controls/Control';
+import { stylesFromArray } from '../util';
+import type { CSSRules } from '../parser/typedefs';
+import { parseAttributes } from '../parser/parseAttributes';
+import { Path } from './Path';
+import { DEFAULT_SVG_FONT_SIZE } from '../constants';
 
 // @TODO: Many things here are configuration related and shouldn't be on the class nor prototype
 // regexes, list of properties that are not suppose to change by instances, magic consts.
@@ -95,6 +104,18 @@ export class Textbox<
 
   static ownDefaults = textboxDefaultValues;
 
+  // James modified 自动计算文字高度
+  static enableCalcTextHeight = false;
+
+  /**
+   * James modified 自动计算文字高度
+   * 增加wrap宽度，设置为page的宽度
+   * 增加textbox wrap的默认宽度
+   * @type Number
+   * @default
+   */
+  static defaultWrapWidth = 1920;
+
   static getDefaults(): Record<string, any> {
     return {
       ...super.getDefaults(),
@@ -136,16 +157,20 @@ export class Textbox<
     this.dynamicMinWidth = 0;
     // wrap lines
     this._styleMap = this._generateStyleMap(this._splitText());
+    // James modified
     // if after wrapping, the width is smaller than dynamicMinWidth, change the width and re-wrap
-    if (this.dynamicMinWidth > this.width) {
+    if (!this.path && this.dynamicMinWidth > this.width) {
       this._set('width', this.dynamicMinWidth);
     }
     if (this.textAlign.includes(JUSTIFY)) {
       // once text is measured we need to make space fatter to make justified text.
       this.enlargeSpaces();
     }
-    // clear cache and re-calculate height
-    this.height = this.calcTextHeight();
+    // James modified 取消 textbox 自动计算高度
+    if (!this.path && Textbox.enableCalcTextHeight) {
+      // clear cache and re-calculate height
+      this.height = this.calcTextHeight();
+    }
   }
 
   /**
@@ -531,8 +556,12 @@ export class Textbox<
    * @override
    */
   _splitTextIntoLines(text: string) {
+    // James modified 存在path时候不按照宽度换行
+    var wrapWidth = this.path ? 10000000 : this.width;
+    // 如果width 不存在， 使用page width
+    wrapWidth = wrapWidth || Textbox.defaultWrapWidth;
     const newText = super._splitTextIntoLines(text),
-      graphemeLines = this._wrapText(newText.lines, this.width),
+      graphemeLines = this._wrapText(newText.lines, wrapWidth),
       lines = new Array(graphemeLines.length);
     for (let i = 0; i < graphemeLines.length; i++) {
       lines[i] = graphemeLines[i].join('');
@@ -578,6 +607,412 @@ export class Textbox<
       ...propertiesToInclude,
     ] as K[]) as Pick<T, K> & SProps;
   }
+
+  /**
+   * Returns FabricText instance from an SVG element (<b>not yet implemented</b>)
+   * @static
+   * @memberOf Text
+   * @param {HTMLElement} element Element to parse
+   * @param {Object} [options] Options object
+   */
+  static async fromElement(
+    element: HTMLElement,
+    options: Abortable,
+    cssRules?: CSSRules,
+  ) {
+    if (!element) {
+      return null;
+    }
+
+    var parsedAttributes = parseAttributes(
+      element,
+      Textbox.ATTRIBUTE_NAMES,
+      cssRules,
+    );
+    const textOptions = {
+      ...(cssRules ? JSON.parse(JSON.stringify(cssRules)) : {}),
+      ...parsedAttributes,
+    };
+    // 处理style中字体样式带单引号问题
+    let reg = /^'(.*)'$/;
+    if (reg.test(textOptions.fontFamily)) {
+      textOptions.fontFamily = textOptions.fontFamily.slice(1, -1);
+    }
+
+    textOptions.top = textOptions.top || 0;
+    textOptions.left = textOptions.left || 0;
+    if (parsedAttributes.textDecoration) {
+      var textDecoration = parsedAttributes.textDecoration;
+      if (textDecoration.indexOf('underline') !== -1) {
+        textOptions.underline = true;
+      }
+      if (textDecoration.indexOf('overline') !== -1) {
+        textOptions.overline = true;
+      }
+      if (textDecoration.indexOf('line-through') !== -1) {
+        textOptions.linethrough = true;
+      }
+      delete textOptions.textDecoration;
+    }
+    if ('dx' in parsedAttributes) {
+      textOptions.left += parsedAttributes.dx;
+    }
+    if ('dy' in parsedAttributes) {
+      textOptions.top += parsedAttributes.dy;
+    }
+    if (!('fontSize' in textOptions)) {
+      textOptions.fontSize = DEFAULT_SVG_FONT_SIZE;
+    }
+
+    let text: Textbox;
+    const paths = element.getElementsByTagName('textPath');
+    if (paths.length) {
+      text = this._fromTextPath(paths[0], textOptions, parsedAttributes);
+    } else {
+      text = this._fromTextSpan(element, textOptions, parsedAttributes);
+    }
+    return text;
+  }
+
+  static _findSvgTextPath(element: any, id: string) {
+    const svg = element.closest('svg');
+    return svg.querySelector(id);
+  }
+
+  static _fromTextPath = (
+    textPath: any,
+    options: any,
+    parsedAttributes: { [key: string]: string },
+  ): Textbox => {
+    var parsedAnchor = parsedAttributes.textAnchor || 'left';
+
+    var textPathParsedAttributes = parseAttributes(textPath, [
+      'href',
+      'text-anchor',
+      'startOffset',
+    ]);
+    if (textPathParsedAttributes.textAnchor) {
+      parsedAnchor = textPathParsedAttributes.textAnchor;
+    }
+    if (parsedAnchor === 'middle') {
+      parsedAnchor = 'center';
+    } else if (parsedAnchor === 'end') {
+      parsedAnchor = 'right';
+    }
+    options.textAlign = parsedAnchor;
+
+    var textContent = textPath.textContent;
+    var text = new Textbox(textContent, options);
+
+    const href = textPathParsedAttributes.href;
+    if (href && href.startsWith('#')) {
+      const pathElement = Textbox._findSvgTextPath(textPath, href);
+      if (pathElement) {
+        var pathParsedAttributes = parseAttributes(
+          pathElement,
+          Path.ATTRIBUTE_NAMES,
+        );
+        const path = new Path(pathParsedAttributes.d, {
+          ...pathParsedAttributes,
+          ...{
+            strokeWidth: 1,
+            stroke: '#ff0000',
+            fill: null as any,
+            visible: false,
+          },
+        });
+        // 需要计算实际字体大小
+        Textbox.enableCalcTextHeight = true;
+        const textHeight =
+          new Textbox('i', {
+            fontFamily: options.fontFamily,
+            fontSize: options.fontSize,
+            fontStyle: options.fontStyle,
+            fontWeight: options.fontWeight,
+            width: undefined,
+            height: undefined,
+          }).height || 20;
+        text.set({
+          width: (path.width || 0) + textHeight * 2,
+          height: (path.height || 0) + textHeight * 2,
+          path,
+          pathType: 'custom',
+        } as any);
+        // 取消自动计算文字高度
+        Textbox.enableCalcTextHeight = false;
+      }
+    }
+    // 设置位置中心点为左上角
+    text.set({
+      left: options.left - (text.width || 0) / 2,
+      top: options.top - (text.height || 0) / 2,
+    });
+    return text;
+  };
+
+  static _fromTextSpan(
+    element: any,
+    options: any,
+    parsedAttributes: { [key: string]: string },
+  ): Textbox {
+    var textContent = '';
+    var parsedAnchor = parsedAttributes.textAnchor || 'left';
+    // 是否需要根据tspan位置计算对齐
+    let calcHorAlign = !parsedAttributes.textAnchor;
+    let calcAdjustHorAlign = '';
+
+    // The XML is not properly parsed in IE9 so a workaround to get
+    // textContent is through firstChild.data. Another workaround would be
+    // to convert XML loaded from a file to be converted using DOMParser (same way loadSVGFromString() does)
+
+    let lineCnt = 1;
+    let alignmentBaseline = 'auto';
+    let spanOffX = 0,
+      minSpanX: number | null = null,
+      spanOffY = 0;
+
+    if (element.hasAttribute('line-height')) {
+      options.lineHeight = parseFloat(element.getAttribute('line-height'));
+    } else if (options['line-height']) {
+      // 从style 转换过来
+      options.lineHeight = parseFloat(options['line-height']) / 100;
+    } else {
+      options.lineHeight = 1;
+    }
+
+    if (!('textContent' in element)) {
+      if ('firstChild' in element && element.firstChild !== null) {
+        if ('data' in element.firstChild && element.firstChild.data !== null) {
+          textContent = element.firstChild.data;
+        }
+      }
+    } else {
+      textContent = element.textContent;
+      let spans = element.getElementsByTagName('tspan');
+      if (spans.length > 0) {
+        // 多行文字
+        let lines: {
+            text: string;
+            left: number;
+            width?: number;
+            right?: number;
+          }[] = [],
+          lineText = '',
+          curLineLeft = 0, // 本行的 水平方向位置
+          preSpanTop = 0, // 前一个tspan的 垂直方向位置
+          sumDx = 0,
+          sumDy = 0;
+        for (let i = 0; i < spans.length; i++) {
+          var parsedSpanAttributes = parseAttributes(
+            spans[i],
+            Textbox.ATTRIBUTE_NAMES,
+          );
+
+          sumDx += Number(parsedSpanAttributes.dx) || 0;
+          sumDy += Number(parsedSpanAttributes.dy) || 0;
+          // 在使用tspan判断对齐时spanX取最小的值
+          if ('left' in parsedSpanAttributes) {
+            let spanX = parseFloat(parsedSpanAttributes.left);
+            minSpanX = minSpanX != null ? Math.min(minSpanX, spanX) : spanX;
+          }
+          // 现在多个tspan用多行文字, 所以对齐和位置只处理第一个 tspan
+          if (i === 0) {
+            if (spans[i].hasAttribute('text-anchor')) {
+              // 水平方向
+              let anchor = spans[i].getAttribute('text-anchor');
+              // left | center | right
+              // start | middle | end
+              if (anchor === 'middle') {
+                parsedAnchor = 'center';
+              } else if (anchor === 'end') {
+                parsedAnchor = 'right';
+              }
+              calcHorAlign = false;
+            }
+            if (spans[i].hasAttribute('alignment-baseline')) {
+              // 垂直方向
+              alignmentBaseline = spans[i].getAttribute('alignment-baseline');
+            }
+
+            // 处理tspan设置的位置和偏移
+            // top只处理第一行
+            if ('top' in parsedSpanAttributes) {
+              let spanY = parseFloat(parsedSpanAttributes.top);
+              spanY += sumDy;
+
+              spanOffY = options.top - spanY;
+            }
+          }
+
+          // 多个tspan可能在一行 根据 y position判断是否换行
+          // 另外没有对齐方式的，计算判断对齐方式，根据left的值判断对齐方式
+          (parsedSpanAttributes as any).left =
+            Number(parsedSpanAttributes.left || 0) + sumDx;
+          (parsedSpanAttributes as any).top =
+            Number(parsedSpanAttributes.top || 0) + sumDy;
+
+          if (i === 0 || preSpanTop === (parsedSpanAttributes as any).top) {
+            lineText += spans[i].textContent;
+            if (i === 0) {
+              curLineLeft = Number((parsedSpanAttributes as any).left || 0);
+            }
+          } else {
+            lines.push({ text: lineText, left: curLineLeft });
+            lineText = spans[i].textContent;
+            curLineLeft = Number((parsedSpanAttributes as any).left || 0);
+          }
+
+          // 记住上一个span的Y位置
+          preSpanTop = (parsedSpanAttributes as any).top;
+        }
+        // 加上最后一行
+        if (lineText.length) {
+          lines.push({ text: lineText, left: curLineLeft });
+        }
+        // 加上换行符号
+        textContent = lines.map((v) => v.text).join('\n');
+        lineCnt = lines.length;
+
+        if (calcHorAlign) {
+          if (lines.some((v) => v.left !== curLineLeft)) {
+            // 取最left的最小值,和right最大值
+            let minLeft = lines[0].left,
+              maxRight = lines[0].left,
+              maxWidth = 0,
+              minCenter: number | null = null,
+              maxCenter: number | null = null,
+              maxChar = 0,
+              maxCharIdx = 0;
+
+            lines.forEach((v, idx) => {
+              minLeft = Math.min(minLeft, v.left);
+              v.width = (new Textbox(v.text, options) as any).calcTextWidth();
+              v.right = v.left + (v.width || 0);
+              maxRight = Math.max(maxRight, v.right);
+              maxWidth = Math.max(maxWidth, v.width || 0);
+              if (v.width) {
+                const center = v.left + (v.width || 0) / 2;
+                minCenter = minCenter ? Math.min(minCenter, center) : center;
+                maxCenter = maxCenter ? Math.max(maxCenter, center) : center;
+
+                if (v.text.length > maxChar) {
+                  maxChar = v.text.length;
+                  maxCharIdx = idx;
+                }
+              }
+            });
+            let leftGap = 0,
+              rightGap = 0;
+            lines.forEach((v) => {
+              leftGap = Math.max(leftGap, (v.left || 0) - minLeft);
+              rightGap = Math.max(rightGap, maxRight - (v.right || 0));
+            });
+            // 计算中心点位置
+            if (maxCenter && minCenter) {
+              const centerOff = maxCenter - minCenter;
+              const onCharWidth =
+                (lines[maxCharIdx].width || 0) / lines[maxCharIdx].text.length;
+              // 左边间距大于右边两倍 或者 中心点偏移超过1/2字符且右边间距小于1/3字符
+              if (
+                leftGap / (rightGap || 1) > 2 &&
+                centerOff > onCharWidth / 2 &&
+                rightGap < onCharWidth / 3
+              ) {
+                calcAdjustHorAlign = 'right';
+              } else if (centerOff < onCharWidth / 2) {
+                calcAdjustHorAlign = 'center';
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 处理文字的水平偏移
+    spanOffX = options.left - (minSpanX || 0);
+
+    // textAlign保持和parsedAnchor一致
+    options.textAlign = parsedAnchor;
+
+    // 注释掉原来删除换行等符号的代码
+    //textContent = textContent.replace(/^\s+|\s+$|\n+/g, '').replace(/\s+/g, ' ');
+    var originalStrokeWidth = options.strokeWidth;
+    options.strokeWidth = 0;
+
+    // 导入时打开自动计算文字高度，否则文字高度和 Y 轴位置错误
+    Textbox.enableCalcTextHeight = true;
+    var text = new Textbox(textContent, options),
+      textOneLineHeight = text.height / lineCnt,
+      textHeightScaleFactor = text.getScaledHeight() / text.height,
+      lineHeightDiff =
+        (textOneLineHeight + text.strokeWidth) * text.lineHeight -
+        textOneLineHeight,
+      scaledDiff = lineHeightDiff * textHeightScaleFactor,
+      textHeight = text.getScaledHeight() / lineCnt + scaledDiff,
+      offX = 0,
+      offY = 0;
+
+    // 默认 alignment-baseline="before-edge" offY = 0
+    let offScale = 0;
+    if (alignmentBaseline === 'before-edge') {
+      // 这个是1.0 导出的偏移值，多行且间距设置大于1也会有变化
+      // 暂时这么处理， 以后再解决
+      offScale = 1.1;
+    } else if (alignmentBaseline === 'auto') {
+      // alignment-baseline="auto" 或者 没有设置
+      offScale = 0.02913333333;
+    }
+
+    if (offScale !== 0) {
+      offY =
+        (textHeight - text.fontSize * (offScale + text._fontSizeFraction)) /
+        text.lineHeight;
+    }
+
+    // 取消自动计算文字高度
+    Textbox.enableCalcTextHeight = false;
+    /*
+      Adjust positioning:
+        x/y attributes in SVG correspond to the bottom-left corner of text bounding box
+        fabric output by default at top, left.
+    */
+    const adjustOption: Partial<ITextProps> = {};
+    // 源码中options.width总是等于svg的宽度, 之前是new Text不能编辑文字，宽度设置为svg宽度也无效
+    // 修改为 new fabric.Textbox，并且设置为计算的正确宽度
+    const originWidth = options.width;
+    let width = text.calcTextWidth();
+    // 有时候计算出来的大小是不对的， 可能是字体的原因， 导致TextBox自动换行了, 所以加i字符的宽度
+    const oneIWidth = (new Textbox('i', options) as any).calcTextWidth();
+    width += oneIWidth;
+
+    if (originWidth !== width) {
+      adjustOption.width = width;
+    }
+    if (calcAdjustHorAlign) {
+      // tspan 按字符分开计算的对齐
+      adjustOption.textAlign = calcAdjustHorAlign;
+    }
+
+    // 2021.1.29修改
+    // Vectr1.0导出的svg，需要处理水平居中或右对齐偏移
+    // Vectr2.0导出的是按照span位置判断的对齐不需要处理整个width的位置偏移， 但是需要处理 oneIWidth的位置偏移
+    const textAlign = calcAdjustHorAlign || parsedAnchor;
+    if (textAlign === 'center') {
+      offX = (parsedAnchor === 'center' ? width : oneIWidth) / 2;
+    } else if (textAlign === 'right') {
+      offX = parsedAnchor === 'right' ? width : oneIWidth;
+    }
+
+    text.set({
+      ...adjustOption,
+      left: text.left - offX - spanOffX,
+      top: text.top - offY - spanOffY,
+      strokeWidth:
+        typeof originalStrokeWidth !== 'undefined' ? originalStrokeWidth : 1,
+    });
+    return text;
+  }
 }
 
 classRegistry.setClass(Textbox);
+classRegistry.setSVGClass(Textbox);

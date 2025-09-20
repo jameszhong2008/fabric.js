@@ -27,7 +27,7 @@ import {
 } from '../../util/misc/textStyles';
 import { getPathSegmentsInfo, getPointOnPath } from '../../util/path';
 import { cacheProperties } from '../Object/FabricObject';
-import type { Path } from '../Path';
+import { Path } from '../Path';
 import { TextSVGExportMixin } from './TextSVGExportMixin';
 import { applyMixins } from '../../util/applyMixins';
 import type { FabricObjectProps, SerializedObjectProps } from '../Object/types';
@@ -47,6 +47,8 @@ import { isFiller } from '../../util/typeAssertions';
 import type { Gradient } from '../../gradient/Gradient';
 import type { Pattern } from '../../Pattern';
 import type { CSSRules } from '../../parser/typedefs';
+import { renderCircleControl, renderSquareControl } from '../../controls';
+import { ITextProps } from '../IText/IText';
 
 let measuringContext: CanvasRenderingContext2D | null;
 
@@ -90,6 +92,8 @@ export type GraphemeBBox = {
   renderLeft?: number;
   renderTop?: number;
   angle?: number;
+  // James modified
+  visible?: boolean;
 };
 
 // @TODO this is not complete
@@ -431,6 +435,25 @@ export class FabricText<
 
   static ownDefaults = textDefaultValues;
 
+  /**
+   * James add
+   * Indicates whether text is in editing mode
+   * @type Boolean
+   * @default
+   */
+  declare isEditing: boolean;
+  /**
+   * James add
+   * 是否有隐藏文字
+   */
+  declare hasHideText: boolean;
+
+  /**
+   * James add
+   * 是否启用计算文字高度
+   */
+  static enableCalcTextHeight: boolean;
+
   static type = 'Text';
 
   static getDefaults(): Record<string, any> {
@@ -461,6 +484,12 @@ export class FabricText<
     const path = this.path;
     if (path) {
       path.segmentsInfo = getPathSegmentsInfo(path.path);
+
+      // James modified 检查空路径的话，设置path为空
+      if (!path.width && !path.height) {
+        console.log(this, 'text path empty');
+        this.path = undefined;
+      }
     }
   }
 
@@ -750,7 +779,8 @@ export class FabricText<
         // at this point charbox are either standard or full with pathInfo if there is a path.
         const charBox = this.__charBounds[i][j] as Required<GraphemeBBox>;
         currentColor = this.getValueOfPropertyAt(i, j, 'textBackgroundColor');
-        if (this.path) {
+        // James modified
+        if (this.path && !this.isEditing) {
           ctx.save();
           ctx.translate(charBox.renderLeft, charBox.renderTop);
           ctx.rotate(charBox.angle);
@@ -954,15 +984,30 @@ export class FabricText<
         reverse ? i-- : i++
       ) {
         graphemeInfo = lineBounds[i];
-        if (positionInPath > totalPathLength) {
+
+        // James modified
+        /* if (positionInPath > totalPathLength) {
           positionInPath %= totalPathLength;
         } else if (positionInPath < 0) {
           positionInPath += totalPathLength;
+        } */
+        // 超过路径范围外不显示
+        var visible = false;
+        var tolerance = 2;
+        if (
+          positionInPath >= 0 - tolerance &&
+          positionInPath + graphemeInfo.kernedWidth <=
+            totalPathLength + tolerance
+        ) {
+          visible = true;
         }
-        // it would probably much faster to send all the grapheme position for a line
-        // and calculate path position/angle at once.
-        this._setGraphemeOnPath(positionInPath, graphemeInfo);
+        if (visible) {
+          // it would probably much faster to send all the grapheme position for a line
+          // and calculate path position/angle at once.
+          this._setGraphemeOnPath(positionInPath, graphemeInfo);
+        }
         positionInPath += graphemeInfo.kernedWidth;
+        graphemeInfo.visible = visible;
       }
     }
     return { width: width, numOfSpaces: 0 };
@@ -1083,6 +1128,17 @@ export class FabricText<
   }
 
   /**
+   * James add
+   * 是否应该按行隐藏文字
+   * @returns
+   */
+  _shouldHideTextLine() {
+    return !this.isEditing && !this.path;
+  }
+
+  /**
+   * James modified
+   * 框子外的文字不绘制
    * @private
    * @param {CanvasRenderingContext2D} ctx Context to render on
    * @param {String} method Method name ("fillText" or "strokeText")
@@ -1095,10 +1151,23 @@ export class FabricText<
     let lineHeights = 0;
     const left = this._getLeftOffset(),
       top = this._getTopOffset();
+
+    // 存在隐藏文字
+    this.hasHideText = false;
     for (let i = 0, len = this._textLines.length; i < len; i++) {
       const heightOfLine = this.getHeightOfLine(i),
         maxHeight = heightOfLine / this.lineHeight,
         leftOffset = this._getLineLeftOffset(i);
+
+      // 非编辑状态超过box 不显示
+      if (
+        this._shouldHideTextLine() &&
+        lineHeights + maxHeight * 0.8 > this.height
+      ) {
+        this.hasHideText = true;
+        break;
+      }
+
       this._renderTextLine(
         method,
         ctx,
@@ -1110,6 +1179,47 @@ export class FabricText<
       lineHeights += heightOfLine;
     }
     ctx.restore();
+  }
+
+  /**
+   * James add
+   * 增加隐藏文字图标
+   */
+  showHideTextIcon() {
+    const control = this.controls?.['mb'];
+    if (control) {
+      control.render = (ctx, left, top, styleOverride, fabricObject) => {
+        styleOverride = styleOverride || {};
+        if (this.hasHideText) {
+          styleOverride = {
+            ...styleOverride,
+            cornerStrokeColor: '#FF0000',
+            cornerSize: 10,
+          };
+        }
+        switch (styleOverride.cornerStyle || fabricObject.cornerStyle) {
+          case 'circle':
+            renderCircleControl.call(
+              control,
+              ctx,
+              left,
+              top,
+              styleOverride,
+              fabricObject,
+            );
+            break;
+          default:
+            renderSquareControl.call(
+              control,
+              ctx,
+              left,
+              top,
+              styleOverride,
+              fabricObject,
+            );
+        }
+      };
+    }
   }
 
   /**
@@ -1172,6 +1282,8 @@ export class FabricText<
         !path,
       isLtr = this.direction === 'ltr',
       sign = this.direction === 'ltr' ? 1 : -1,
+      // James modified
+      // 修改为之前绘制 direction rtl的方式，5.3.0版本的绘制方式显示有问题
       // this was changed in the PR #7674
       // currentDirection = ctx.canvas.getAttribute('dir');
       currentDirection = ctx.direction;
@@ -1187,6 +1299,7 @@ export class FabricText<
     ctx.save();
     if (currentDirection !== this.direction) {
       ctx.canvas.setAttribute('dir', isLtr ? 'ltr' : 'rtl');
+      // James modified
       ctx.direction = isLtr ? 'ltr' : 'rtl';
       ctx.textAlign = isLtr ? LEFT : RIGHT;
     }
@@ -1194,6 +1307,7 @@ export class FabricText<
     if (shortCut) {
       // render all the line in one pass without checking
       // drawingLeft = isLtr ? left : left - this.getLineWidth(lineIndex);
+      // James modified
       this._renderChar(method, ctx, lineIndex, 0, line.join(''), left, top);
       ctx.restore();
       return;
@@ -1221,20 +1335,23 @@ export class FabricText<
         timeToRender = hasStyleChanged(actualStyle, nextStyle, false);
       }
       if (timeToRender) {
-        if (path) {
-          ctx.save();
-          ctx.translate(charBox.renderLeft, charBox.renderTop);
-          ctx.rotate(charBox.angle);
-          this._renderChar(
-            method,
-            ctx,
-            lineIndex,
-            i,
-            charsToRender,
-            -boxWidth / 2,
-            0,
-          );
-          ctx.restore();
+        // James modified
+        if (path && !this.isEditing) {
+          if (charBox.visible) {
+            ctx.save();
+            ctx.translate(charBox.renderLeft, charBox.renderTop);
+            ctx.rotate(charBox.angle);
+            this._renderChar(
+              method,
+              ctx,
+              lineIndex,
+              i,
+              charsToRender,
+              -boxWidth / 2,
+              0,
+            );
+            ctx.restore();
+          }
         } else {
           drawingLeft = left;
           this._renderChar(
@@ -1760,6 +1877,8 @@ export class FabricText<
    * @returns  Lines in the text
    */
   _splitTextIntoLines(text: string): TextLinesInfo {
+    // James modified 生成换行数据， 如果是path则不进行换行(删除换行字符)
+    text = this.path ? text.replaceAll(/\r?\n/g, '') : text;
     const lines = text.split(this._reNewline),
       newLines = new Array<string[]>(lines.length),
       newLine = ['\n'];
@@ -1870,83 +1989,6 @@ export class FabricText<
     'text-anchor',
   );
 
-  /**
-   * Returns FabricText instance from an SVG element (<b>not yet implemented</b>)
-   * @static
-   * @memberOf Text
-   * @param {HTMLElement} element Element to parse
-   * @param {Object} [options] Options object
-   */
-  static async fromElement(
-    element: HTMLElement,
-    options: Abortable,
-    cssRules?: CSSRules,
-  ) {
-    const parsedAttributes = parseAttributes(
-      element,
-      FabricText.ATTRIBUTE_NAMES,
-      cssRules,
-    );
-
-    const {
-      textAnchor = LEFT as typeof LEFT | typeof CENTER | typeof RIGHT,
-      textDecoration = '',
-      dx = 0,
-      dy = 0,
-      top = 0,
-      left = 0,
-      fontSize = DEFAULT_SVG_FONT_SIZE,
-      strokeWidth = 1,
-      ...restOfOptions
-    } = { ...options, ...parsedAttributes };
-
-    const textContent = (element.textContent || '')
-      .replace(/^\s+|\s+$|\n+/g, '')
-      .replace(/\s+/g, ' ');
-
-    // this code here is probably the usual issue for SVG center find
-    // this can later looked at again and probably removed.
-
-    const text = new this(textContent, {
-        left: left + dx,
-        top: top + dy,
-        underline: textDecoration.includes('underline'),
-        overline: textDecoration.includes('overline'),
-        linethrough: textDecoration.includes('line-through'),
-        // we initialize this as 0
-        strokeWidth: 0,
-        fontSize,
-        ...restOfOptions,
-      }),
-      textHeightScaleFactor = text.getScaledHeight() / text.height,
-      lineHeightDiff =
-        (text.height + text.strokeWidth) * text.lineHeight - text.height,
-      scaledDiff = lineHeightDiff * textHeightScaleFactor,
-      textHeight = text.getScaledHeight() + scaledDiff;
-
-    let offX = 0;
-    /*
-      Adjust positioning:
-        x/y attributes in SVG correspond to the bottom-left corner of text bounding box
-        fabric output by default at top, left.
-    */
-    if (textAnchor === CENTER) {
-      offX = text.getScaledWidth() / 2;
-    }
-    if (textAnchor === RIGHT) {
-      offX = text.getScaledWidth();
-    }
-    text.set({
-      left: text.left - offX,
-      top:
-        text.top -
-        (textHeight - text.fontSize * (0.07 + text._fontSizeFraction)) /
-          text.lineHeight,
-      strokeWidth,
-    });
-    return text;
-  }
-
   /* _FROM_SVG_END_ */
 
   /**
@@ -1972,4 +2014,3 @@ export class FabricText<
 
 applyMixins(FabricText, [TextSVGExportMixin]);
 classRegistry.setClass(FabricText);
-classRegistry.setSVGClass(FabricText);

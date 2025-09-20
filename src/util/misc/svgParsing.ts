@@ -1,3 +1,4 @@
+import { Pattern } from '../../Pattern';
 import { Color } from '../../color/Color';
 import { config } from '../../config';
 import { DEFAULT_SVG_FONT_SIZE, FILL, NONE } from '../../constants';
@@ -133,7 +134,8 @@ export const colorPropToSVG = (
   if (!value) {
     colorValue = 'none';
   } else if (value.toLive) {
-    colorValue = `url(#SVGID_${value.id})`;
+    // James modified 判断是 pattern 对象的话，填充为none
+    colorValue = value instanceof Pattern ? 'none' : `url(#SVGID_${value.id})`;
   } else {
     const color = new Color(value),
       opacity = color.getAlpha();

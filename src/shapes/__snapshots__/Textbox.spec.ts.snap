@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Textbox fromObject 1`] = `
+exports[`Textbox > fromObject 1`] = `
 {
   "angle": 0,
   "backgroundColor": "",
@@ -58,7 +58,7 @@ fox",
 }
 `;
 
-exports[`Textbox fromObject 2`] = `
+exports[`Textbox > fromObject 2`] = `
 {
   "height": 254.928,
   "left": 0,
@@ -72,7 +72,7 @@ fox",
 }
 `;
 
-exports[`Textbox stylesToArray edge case 1`] = `
+exports[`Textbox > stylesToArray edge case 1`] = `
 [
   {
     "end": 10,
@@ -91,7 +91,7 @@ exports[`Textbox stylesToArray edge case 1`] = `
 ]
 `;
 
-exports[`Textbox toObject with styles 1`] = `
+exports[`Textbox > toObject with styles 1`] = `
 {
   "angle": 0,
   "backgroundColor": "",

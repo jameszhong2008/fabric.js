@@ -1,4 +1,5 @@
 import { Gradient } from '../gradient/Gradient';
+import { Pattern } from '../Pattern/Pattern';
 import { Group } from '../shapes/Group';
 import { FabricImage } from '../shapes/Image';
 import { classRegistry } from '../ClassRegistry';
@@ -19,12 +20,18 @@ import type { ParsedViewboxTransform } from './applyViewboxTransform';
 import type { SVGOptions } from '../gradient';
 import { getTagName } from './getTagName';
 import { parseTransformAttribute } from './parseTransformAttribute';
+import { getPatternDefs } from './getPatternDefs';
+import { PatternOptions, SerializedPatternOptions } from '../Pattern';
 
-const findTag = (el: Element) =>
-  classRegistry.getSVGClass(getTagName(el).toLowerCase());
+const findTag = (el: Element) => {
+  let tagName = getTagName(el).toLowerCase();
+  if (tagName === 'text') tagName = 'textbox';
+
+  return classRegistry.getSVGClass(tagName);
+};
 
 type StorageType = {
-  fill: SVGGradientElement;
+  fill: SVGGradientElement | PatternOptions;
   stroke: SVGGradientElement;
   clipPath: Element[];
 };
@@ -44,6 +51,7 @@ export class ElementsParser {
   declare doc: Document;
   declare clipPaths: Record<string, Element[]>;
   declare gradientDefs: Record<string, SVGGradientElement>;
+  declare patternDefs: Record<string, PatternOptions>;
   declare cssRules: CSSRules;
 
   constructor(
@@ -60,6 +68,7 @@ export class ElementsParser {
     this.doc = doc;
     this.clipPaths = clipPaths;
     this.gradientDefs = getGradientDefs(doc);
+    this.patternDefs = getPatternDefs(doc);
     this.cssRules = getCSSRules(doc);
   }
 
@@ -78,6 +87,8 @@ export class ElementsParser {
         this.cssRules,
       );
       this.resolveGradient(obj, el, FILL);
+      // James modified
+      this.resolvePattern(obj, el, FILL);
       this.resolveGradient(obj, el, STROKE);
       if (obj instanceof FabricImage && obj._originalElement) {
         removeTransformMatrixForSvgParsing(
@@ -133,6 +144,24 @@ export class ElementsParser {
     }
   }
 
+  /**
+   * James modified
+   * @param {*} obj
+   * @param {*} el
+   * @param {*} property
+   */
+  resolvePattern(obj: NotParsedFabricObject, el: Element, property: 'fill') {
+    var patternDef = this.extractPropertyDefinition(
+      obj,
+      property,
+      this.patternDefs,
+    ) as PatternOptions;
+    if (patternDef) {
+      var pattern = new Pattern(patternDef);
+      obj.set(property, pattern);
+    }
+  }
+
   // TODO: resolveClipPath could be run once per clippath with minor work per object.
   // is a refactor that i m not sure is worth on this code
   async resolveClipPath(
@@ -156,6 +185,20 @@ export class ElementsParser {
       ) {
         clipPathOwner = clipPathOwner.parentElement;
       }
+
+      // James modified
+      // 把 ClipPath 节点移出clipPathOwner, 避免重复解析clipPath 并造成 Maximum call stack size
+      // 但是这个操作导致了 clipPath的父节点的矩阵在调用fabric.parseAttributes没有乘到clipPath上
+      // 通常矩阵是 svg > g > clipPath > path, 这样的话变成了 svg > clipPath > path
+      // 因此把 下面的移出操作放到创建path(klass.fromElement)之后
+      // clipPathOwner.parentNode.appendChild(clipPathTag);
+
+      // 暂时通过修改 clipPath的transform处理
+      if (clipPathOwner.hasAttribute('transform'))
+        clipPathTag.setAttribute(
+          'transform',
+          clipPathOwner.getAttribute('transform')!,
+        );
       // move the clipPath tag as sibling to the real element that is using it
       clipPathOwner.parentElement!.appendChild(clipPathTag!);
 

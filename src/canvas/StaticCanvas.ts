@@ -832,15 +832,14 @@ export class StaticCanvas<
    * this alias is provided because if you call JSON.stringify on an instance,
    * the toJSON object will be invoked if it exists.
    * Having a toJSON method means you can do JSON.stringify(myCanvas)
+   * JSON does not support additional properties because toJSON has its own signature
    * @return {Object} JSON compatible object
    * @tutorial {@link http://fabricjs.com/fabric-intro-part-3#serialization}
    * @see {@link http://jsfiddle.net/fabricjs/pec86/|jsFiddle demo}
-   * @example <caption>JSON without additional properties</caption>
-   * var json = canvas.toJSON();
-   * @example <caption>JSON with additional properties included</caption>
-   * var json = canvas.toJSON(['lockMovementX', 'lockMovementY', 'lockRotation', 'lockScalingX', 'lockScalingY']);
-   * @example <caption>JSON without default values</caption>
-   * var json = canvas.toJSON();
+   * @example <caption>JSON representation of canvas </caption>
+   * const json = canvas.toJSON();
+   * @example <caption>JSON representation of canvas </caption>
+   * const json = JSON.stringify(canvas);
    */
   toJSON() {
     return this.toObject();
@@ -1073,8 +1072,45 @@ export class StaticCanvas<
       this.createSVGFontFacesMarkup(),
       this.createSVGRefElementsMarkup(),
       this.createSVGClipPathMarkup(options),
+      // James add
+      this._createPathForText(),
       '</defs>\n',
     );
+  }
+
+  /**
+   * James added this method for exporting text path
+   */
+  _createPathForText() {
+    const pathMarkups: string[] = [];
+    let instance,
+      i,
+      len,
+      objects = this._objects;
+    for (i = 0, len = objects.length; i < len; i++) {
+      instance = objects[i];
+      if (instance.excludeFromExport) {
+        continue;
+      }
+
+      if (!isTextObject(instance) || !instance.path) {
+        continue;
+      }
+      let pathId = `TEXTPATH_${uid()}`;
+      let pathMarkup = instance.path._toSVG();
+      let index = pathMarkup.indexOf('COMMON_PARTS');
+      // 加上id, 和路径偏移
+      pathMarkup[index] = [
+        'id="' + pathId + '" ',
+        'transform="translate(' +
+          -instance.path.pathOffset.x +
+          ',' +
+          -instance.path.pathOffset.y +
+          ')" ',
+      ].join('');
+      pathMarkups.push(pathMarkup.join(''));
+    }
+    return pathMarkups.join('\n');
   }
 
   createSVGClipPathMarkup(options: TSVGExportOptions): string {

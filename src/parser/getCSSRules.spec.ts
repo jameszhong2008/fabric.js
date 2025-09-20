@@ -2,6 +2,8 @@ import { loadSVGFromString } from './loadSVGFromString';
 // Add `Circle` to the class registry, making it available during SVG parsing.
 import '../shapes/Circle';
 
+import { describe, expect, test } from 'vitest';
+
 describe('getCSSRules', () => {
   test('can load svgs with style tags with import statement', async () => {
     const loaded =

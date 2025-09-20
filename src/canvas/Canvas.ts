@@ -557,9 +557,23 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
     const clicks = e.detail;
     if (clicks > 3 || clicks < 2) return;
     this._cacheTransformEventData(e);
-    clicks == 2 && e.type === 'dblclick' && this._handleEvent(e, 'dblclick');
+    clicks == 2 && e.type === 'dblclick' && this._onDblClick(e);
     clicks == 3 && this._handleEvent(e, 'tripleclick');
     this._resetTransformEventData();
+  }
+
+  /**
+   * 双击选择锁定组的子节点
+   * @param e
+   */
+  private _onDblClick(e: TPointerEvent) {
+    if (this.dblClickLock(e)) {
+      // 锁定后立即选中点击子对象
+      this.__onMouseDown(e);
+      this.__onMouseUp(e);
+      return;
+    }
+    this._handleEvent(e, 'dblclick');
   }
 
   /**
@@ -1059,6 +1073,20 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       shouldRender = true;
     } else if (this._shouldClearSelection(e, target)) {
       this.discardActiveObject(e);
+
+      // 锁定对象时且没有指定选中时，如果点击组外空白或对象，取消锁定
+      if (this.isolatedObject && !this._searchTargets) {
+        this.setSearchTargets([this.isolatedObject]);
+        const target = this.findTarget(e);
+        // 没有选中任何对象，或者选中的是锁定对象以外的对象
+        if (target !== this.isolatedObject) {
+          this.isolatedObject = null;
+        }
+        this.setSearchTargets(null);
+        // 在此执行__onMouseDown选中对象
+        this.__onMouseDown(e);
+        return;
+      }
     }
     // we start a group selector rectangle if
     // selection is enabled

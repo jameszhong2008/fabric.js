@@ -28,6 +28,11 @@
 ## [6.6.3]
 
 - docs(): Fixed JSDOCS for astro and typedoc
+## [next]
+
+- chore(): BREAKING: Update browser versions and some dependencies [#10488](https://github.com/fabricjs/fabric.js/pull/10488)
+- ci(): Switch from Jest to Vitest [#10420](https://github.com/fabricjs/fabric.js/pull/10420)
+- chore(): BREAKING: drop node 16 support. Update canvas and jsdom [#10417](https://github.com/fabricjs/fabric.js/pull/10417)
 
 ## [6.6.2]
 

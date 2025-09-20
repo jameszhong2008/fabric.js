@@ -257,6 +257,13 @@ export interface CanvasOptions
    * @default
    */
   preserveObjectStacking: boolean;
+
+  /**
+   * 启用双击锁定组节点，锁定后可选择组节点中的子节点，无论group中interative和subTargetCheck是否启用
+   * @type Boolean
+   * @default
+   */
+  dblClickIsolateObject: boolean;
 }
 
 export type TCanvasOptions = TOptions<CanvasOptions>;
