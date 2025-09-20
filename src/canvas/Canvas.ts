@@ -1083,6 +1083,9 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
           this.isolatedObject = null;
         }
         this.setSearchTargets(null);
+        // 在此执行__onMouseDown选中对象
+        this.__onMouseDown(e);
+        return;
       }
     }
     // we start a group selector rectangle if
