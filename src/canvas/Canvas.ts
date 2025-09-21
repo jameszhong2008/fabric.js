@@ -563,12 +563,13 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
   }
 
   /**
-   * 双击选择锁定组的子节点
+   * Double-click to select the child nodes of the locked group
    * @param e
    */
   private _onDblClick(e: TPointerEvent) {
     if (this.dblClickLock(e)) {
-      // 锁定后立即选中点击子对象
+      // Immediately select the clicked child object after locking
+      this._resetTransformEventData();
       this.__onMouseDown(e);
       this.__onMouseUp(e);
       return;
@@ -1074,16 +1075,16 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
     } else if (this._shouldClearSelection(e, target)) {
       this.discardActiveObject(e);
 
-      // 锁定对象时且没有指定选中时，如果点击组外空白或对象，取消锁定
       if (this.isolatedObject && !this._searchTargets) {
         this.setSearchTargets([this.isolatedObject]);
         const target = this.findTarget(e);
-        // 没有选中任何对象，或者选中的是锁定对象以外的对象
+        // When an object is locked and no selection is specified, if you click on a blank space or object outside the group, the lock is canceled.
         if (target !== this.isolatedObject) {
           this.isolatedObject = null;
         }
         this.setSearchTargets(null);
-        // 在此执行__onMouseDown选中对象
+        // use __onMouseDown select other object immediately after unlocking
+        this._resetTransformEventData();
         this.__onMouseDown(e);
         return;
       }

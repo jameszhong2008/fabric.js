@@ -259,7 +259,9 @@ export interface CanvasOptions
   preserveObjectStacking: boolean;
 
   /**
-   * 启用双击锁定组节点，锁定后可选择组节点中的子节点，无论group中interative和subTargetCheck是否启用
+   * Enable double-click to lock the group node. After locking,
+   * you can select the child nodes in the group node,
+   * regardless of whether interative and subTargetCheck are enabled in the group.
    * @type Boolean
    * @default
    */

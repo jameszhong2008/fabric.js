@@ -198,21 +198,23 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
   declare preserveObjectStacking: boolean;
 
   /**
-   * 启用双击锁定组对象，锁定后只能选择对象的子节点，无论group中interative和subTargetCheck是否启用
+   * Enable double-click to lock the group node. After locking,
+   * you can select the child nodes in the group node,
+   * regardless of whether interative and subTargetCheck are enabled in the group.
    * @type Boolean
    * @default
    */
   declare dblClickIsolateObject: boolean;
 
   /**
-   * 双击锁定的节点, 目前只支持组节点
+   * Double-click the locked node. Currently only group nodes are supported.
    * @type Group | null
    * @default
    */
   isolatedObject: Group | null;
 
   /**
-   * 指定的搜索对象
+   * Specified search objects
    * @type Boolean
    * @default null
    */
@@ -725,7 +727,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
   }
 
   /**
-   * 双击选择
+   * Double-click to lock the group
    * @param e
    * @returns
    */
@@ -738,19 +740,18 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
       const obj = this.searchPossibleTargets(objects, pointer);
       if (obj) {
         if (obj instanceof Group) {
-          // 组才修改锁定
           this.isolatedObject = obj;
           this.discardActiveObject();
-          // 新创建的组对象，子节点coords初始化，否则无法选中
+          // The newly created group object has its child node coords initialized, otherwise it cannot be selected.
           obj._objects.forEach((o) => {
             o.setCoords();
           });
         } else {
-          // 非组对象不处理锁定，返回false继续对象自己的双击事件
+          // Non-group objects do not handle locking, return false to continue the object's own double-click event
           return false;
         }
       } else {
-        // 取消锁定
+        // cancel isolation
         this.isolatedObject = null;
         this.discardActiveObject();
       }
@@ -760,8 +761,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
   }
 
   /**
-   * 设置搜索对象
-   * 如当编辑path时，设置点为可搜索对象
+   * Manually set the search object
    * @param objects
    */
   setSearchTargets(objects: FabricObject[] | null) {
@@ -769,7 +769,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
   }
 
   /**
-   * 返回搜索对象
+   * Returns the search object
    * @returns
    */
   getSearchTargets() {
@@ -930,7 +930,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
     while (i--) {
       const target = objects[i];
       if (this._checkTarget(target, pointer)) {
-        // 没有开启双击锁定节点才搜索子节点
+        // Double-clicking to lock a node before searching for its child nodes is not enabled
         if (
           !this.dblClickIsolateObject &&
           isCollection(target) &&
