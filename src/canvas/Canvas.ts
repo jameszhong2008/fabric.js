@@ -1025,6 +1025,51 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
   }
 
   /**
+   * Change to other isolated object when click on current group's parent
+   * When click empty space or other object, cancel isolated state
+   * @param e
+   * @returns
+   */
+  switchIsolateObject(e: TPointerEvent) {
+    if (!this.isolatedObject || this._searchTargets) return false;
+    let isolatedObject = null;
+    if (this.isolatedObject.parent) {
+      const parents = [];
+      let currentObj = this.isolatedObject;
+      while (currentObj.parent) {
+        parents.push(currentObj.parent);
+        currentObj = currentObj.parent;
+      }
+      // check topmost parent, if it was clicked, find the nearest child object to isolate
+      const topmostParent = parents[parents.length - 1];
+      this.setSearchTargets([topmostParent]);
+      let target = this.findTarget(e);
+      // parent was clicked
+      if (target) {
+        parents.some((parent) => {
+          this.setSearchTargets(parent.getObjects());
+          target = this.findTarget(e);
+          if (target) {
+            isolatedObject = parent;
+            // The newly created group object has its child node coords initialized, otherwise it cannot be selected.
+            parent.getObjects().forEach((o) => {
+              o.setCoords();
+            });
+            return true;
+          }
+          return false;
+        });
+      }
+      this.setSearchTargets(null);
+    }
+    this.isolatedObject = isolatedObject;
+    // use __onMouseDown select other object immediately after unlocking
+    this._resetTransformEventData();
+    this.__onMouseDown(e);
+    return true;
+  }
+
+  /**
    * Method that defines the actions when mouse is clicked on canvas.
    * The method inits the currentTransform parameters and renders all the
    * canvas so the current image can be placed on the top canvas and the rest
@@ -1074,18 +1119,7 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       shouldRender = true;
     } else if (this._shouldClearSelection(e, target)) {
       this.discardActiveObject(e);
-
-      if (this.isolatedObject && !this._searchTargets) {
-        this.setSearchTargets([this.isolatedObject]);
-        const target = this.findTarget(e);
-        // When an object is locked and no selection is specified, if you click on a blank space or object outside the group, the lock is canceled.
-        if (target !== this.isolatedObject) {
-          this.isolatedObject = null;
-        }
-        this.setSearchTargets(null);
-        // use __onMouseDown select other object immediately after unlocking
-        this._resetTransformEventData();
-        this.__onMouseDown(e);
+      if (this.switchIsolateObject(e)) {
         return;
       }
     }
