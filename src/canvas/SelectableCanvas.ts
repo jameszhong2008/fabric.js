@@ -740,6 +740,8 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
       const obj = this.searchPossibleTargets(objects, pointer);
       if (obj) {
         if (obj instanceof Group) {
+          // Let text in group can be edited after isolation
+          obj.interactive = true;
           this.isolatedObject = obj;
           this.discardActiveObject();
           // The newly created group object has its child node coords initialized, otherwise it cannot be selected.

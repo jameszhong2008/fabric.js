@@ -253,8 +253,11 @@ export class FabricObjectSVGExportMixin {
       additionalTransform?: string;
     } = {},
   ): string {
+    var skipShadow = true;
     let clipPath = this.clipPath as FabricObjectSVGExportMixin & FabricObject;
-    const styleInfo = noStyle ? '' : `style="${this.getSvgStyles()}" `,
+    const styleInfo = noStyle
+        ? ''
+        : `style="${this.getSvgStyles(skipShadow)}" `,
       shadowInfo = withShadow ? `style="${this.getSvgFilter()}" ` : '',
       vectorEffect = this.strokeUniform
         ? 'vector-effect="non-scaling-stroke" '
