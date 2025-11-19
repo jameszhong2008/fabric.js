@@ -133,6 +133,13 @@ export class InteractiveFabricObject<
    */
   declare _scaling?: boolean;
 
+  /**
+   * When set to `true`, object's group should not cache
+   * @type Boolean
+   * @default false
+   */
+  preventGroupCache?: boolean;
+
   declare canvas?: Canvas;
 
   static ownDefaults = interactiveObjectDefaultValues;

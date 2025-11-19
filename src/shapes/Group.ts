@@ -456,7 +456,10 @@ export class Group
     const ownCache = FabricObject.prototype.shouldCache.call(this);
     if (ownCache) {
       for (let i = 0; i < this._objects.length; i++) {
-        if (this._objects[i].willDrawShadow()) {
+        if (
+          this._objects[i].willDrawShadow() ||
+          this._objects[i].preventGroupCache
+        ) {
           this.ownCaching = false;
           return false;
         }

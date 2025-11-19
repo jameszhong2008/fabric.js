@@ -642,8 +642,8 @@ export class FabricText<
   _getCacheCanvasDimensions(): TCacheCanvasDimensions {
     const dims = super._getCacheCanvasDimensions();
     const fontSize = this.fontSize;
-    dims.width += fontSize * dims.zoomX;
-    dims.height += fontSize * dims.zoomY;
+    dims.width += fontSize * dims.zoomX * 2;
+    dims.height += fontSize * dims.zoomY * 2;
     return dims;
   }
 
