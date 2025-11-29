@@ -214,11 +214,11 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
   isolatedObject: Group | null;
 
   /**
-   * Specified search objects
+   * Fixed search objects
    * @type Boolean
    * @default null
    */
-  _searchTargets: FabricObject[] | null;
+  _fixedSearchTargets: FabricObject[] | null;
 
   // event config
   declare stopContextMenu: boolean;
@@ -766,8 +766,8 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
    * Manually set the search object
    * @param objects
    */
-  setSearchTargets(objects: FabricObject[] | null) {
-    this._searchTargets = objects;
+  setFixedSearchTargets(objects: FabricObject[] | null) {
+    this._fixedSearchTargets = objects;
   }
 
   /**
@@ -776,7 +776,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
    */
   getSearchTargets() {
     return (
-      this._searchTargets ||
+      this._fixedSearchTargets ||
       (this.isolatedObject ? this.isolatedObject._objects : this._objects)
     );
   }
@@ -799,7 +799,7 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
 
     this.targets = [];
 
-    if (activeObject && aObjects.length >= 1) {
+    if (activeObject && aObjects.length >= 1 && !this._fixedSearchTargets) {
       if (activeObject.findControl(pointer, isTouchEvent(e))) {
         // if we hit the corner of the active object, let's return that.
         return activeObject;

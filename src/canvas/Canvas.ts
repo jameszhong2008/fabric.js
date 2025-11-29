@@ -1031,7 +1031,7 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
    * @returns
    */
   switchIsolateObject(e: TPointerEvent) {
-    if (!this.isolatedObject || this._searchTargets) return false;
+    if (!this.isolatedObject || this._fixedSearchTargets) return false;
     let isolatedObject = null;
     if (this.isolatedObject.parent) {
       const parents = [];
@@ -1042,12 +1042,12 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       }
       // check topmost parent, if it was clicked, find the nearest child object to isolate
       const topmostParent = parents[parents.length - 1];
-      this.setSearchTargets([topmostParent]);
+      this.setFixedSearchTargets([topmostParent]);
       let target = this.findTarget(e);
       // parent was clicked
       if (target) {
         parents.some((parent) => {
-          this.setSearchTargets(parent.getObjects());
+          this.setFixedSearchTargets(parent.getObjects());
           target = this.findTarget(e);
           if (target) {
             isolatedObject = parent;
@@ -1060,7 +1060,7 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
           return false;
         });
       }
-      this.setSearchTargets(null);
+      this.setFixedSearchTargets(null);
     }
     this.isolatedObject = isolatedObject;
     // use __onMouseDown select other object immediately after unlocking
