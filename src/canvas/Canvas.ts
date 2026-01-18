@@ -406,7 +406,7 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
   protected findDragTargets(e: DragEvent) {
     this.targets = [];
     const target = this._searchPossibleTargets(
-      this._objects,
+      this.getSearchTargets(),
       this.getViewportPoint(e),
     );
     return {
@@ -1504,7 +1504,8 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
             this.searchPossibleTargets(prevActiveObjects, pointer) ||
             //  if not found, search under active selection for a target to add
             // `prevActiveObjects` will be searched but we already know they will not be found
-            this.searchPossibleTargets(this._objects, pointer);
+            this.searchPossibleTargets(this.getSearchTargets(), pointer);
+
           // if nothing is found bail out
           if (!target || !target.selectable) {
             return false;
@@ -1513,6 +1514,7 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
         if (target.group === activeObject) {
           // `target` is part of active selection => remove it
           activeObject.remove(target);
+          target.setCoords();
           this._hoveredTarget = target;
           this._hoveredTargets = [...this.targets];
           // if after removing an object we are left with one only...
