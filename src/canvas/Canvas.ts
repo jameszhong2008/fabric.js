@@ -1500,11 +1500,11 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
         if (target === activeObject) {
           const pointer = this.getViewportPoint(e);
           target =
-            // first search active objects for a target to remove
-            this.searchPossibleTargets(prevActiveObjects, pointer) ||
-            //  if not found, search under active selection for a target to add
-            // `prevActiveObjects` will be searched but we already know they will not be found
-            this.searchPossibleTargets(this.getSearchTargets(), pointer);
+            // first search under active selection for a target to add
+            // will search from top level to bottom
+            this.searchPossibleTargets(this.getSearchTargets(), pointer) ||
+            //  if not found, search active objects for a target to remove
+            this.searchPossibleTargets(prevActiveObjects, pointer);
 
           // if nothing is found bail out
           if (!target || !target.selectable) {
