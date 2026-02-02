@@ -909,7 +909,7 @@ export class Textbox<
               rightGap = Math.max(rightGap, maxRight - (v.right || 0));
             });
             // 计算中心点位置
-            if (maxCenter && minCenter) {
+            if (maxCenter !== null && minCenter !== null) {
               const centerOff = maxCenter - minCenter;
               const onCharWidth =
                 (lines[maxCharIdx].width || 0) / lines[maxCharIdx].text.length;

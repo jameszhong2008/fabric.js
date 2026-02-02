@@ -440,6 +440,13 @@ export class IText<
 
     this.canvas.contextTopDirty = true;
     ctx.restore();
+
+    // For grouped objects, ensure selection is rendered after other operations
+    if (this.parent && this.selectionStart !== this.selectionEnd) {
+      setTimeout(() => {
+        this.renderCursorOrSelection();
+      }, 0);
+    }
   }
 
   /**
