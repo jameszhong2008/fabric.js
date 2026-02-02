@@ -324,6 +324,7 @@ export function createCollectionMixin<TBase extends Constructor>(Base: TBase) {
      * @returns array of objects contained in the bounding box, ordered from top to bottom stacking wise
      */
     collectObjects(
+      fromObjects: InteractiveFabricObject[],
       { left, top, width, height }: TBBox,
       { includeIntersecting = true }: { includeIntersecting?: boolean } = {},
     ) {
@@ -332,8 +333,8 @@ export function createCollectionMixin<TBase extends Constructor>(Base: TBase) {
         br = tl.add(new Point(width, height));
 
       // we iterate reverse order to collect top first in case of click.
-      for (let i = this._objects.length - 1; i >= 0; i--) {
-        const object = this._objects[i] as unknown as InteractiveFabricObject;
+      for (let i = fromObjects.length - 1; i >= 0; i--) {
+        const object = fromObjects[i] as unknown as InteractiveFabricObject;
         if (
           object.selectable &&
           object.visible &&

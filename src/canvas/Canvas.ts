@@ -914,6 +914,8 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
     } else if (!isClick && !(this._activeObject as IText)?.isEditing) {
       this.renderTop();
     }
+    // 框选不改变locked对象，不框选时如果没有点击到可以锁定组，设置锁定组为null
+    if (isClick && !this.getActiveObject()) this.isolatedObject = null;
   }
 
   _basicEventHandler<T extends keyof (CanvasEvents | ObjectEvents)>(
@@ -1062,11 +1064,14 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       }
       this.setFixedSearchTargets(null);
     }
-    this.isolatedObject = isolatedObject;
-    // use __onMouseDown select other object immediately after unlocking
-    this._resetTransformEventData();
-    this.__onMouseDown(e);
-    return true;
+    if (isolatedObject) {
+      this.isolatedObject = isolatedObject;
+      // use __onMouseDown select other object immediately after unlocking
+      this._resetTransformEventData();
+      this.__onMouseDown(e);
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -1118,8 +1123,11 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       grouped = true;
       shouldRender = true;
     } else if (this._shouldClearSelection(e, target)) {
+      const objs = this.getActiveObjects();
       this.discardActiveObject(e);
-      if (this.switchIsolateObject(e)) {
+      // 多选取消，重置Coords， 防止无法再次选中
+      objs.forEach((obj) => obj.setCoords());
+      if (!target && this.switchIsolateObject(e)) {
         return;
       }
     }
@@ -1575,6 +1583,7 @@ export class Canvas extends SelectableCanvas implements CanvasOptions {
       size = br.subtract(tl);
 
     const collectedObjects = this.collectObjects(
+      this.getSearchTargets(),
       {
         left: tl.x,
         top: tl.y,
