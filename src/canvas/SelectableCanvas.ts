@@ -799,7 +799,13 @@ export class SelectableCanvas<EventSpec extends CanvasEvents = CanvasEvents>
 
     this.targets = [];
 
-    if (activeObject && aObjects.length >= 1 && !this._fixedSearchTargets) {
+    // valid _fixedSearchTargets is null or _fixedSearchTargets includes activeObject
+    if (
+      activeObject &&
+      aObjects.length >= 1 &&
+      (!this._fixedSearchTargets ||
+        this._fixedSearchTargets.includes(activeObject))
+    ) {
       if (activeObject.findControl(pointer, isTouchEvent(e))) {
         // if we hit the corner of the active object, let's return that.
         return activeObject;

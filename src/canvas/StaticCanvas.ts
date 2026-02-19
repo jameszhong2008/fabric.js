@@ -1096,7 +1096,7 @@ export class StaticCanvas<
       if (!isTextObject(instance) || !instance.path) {
         continue;
       }
-      let pathId = `TEXTPATH_${uid()}`;
+      let pathId = `TEXTPATH_${(instance as any).id}`;
       let pathMarkup = instance.path._toSVG();
       let index = pathMarkup.indexOf('COMMON_PARTS');
       // 加上id, 和路径偏移
