@@ -338,7 +338,10 @@ export class FabricObjectSVGExportMixin {
     if (clipPath) {
       markup.push(clipPathMarkup);
     }
-    markup.push(objectMarkup.join(''));
+    // if use pattern, ignore objectMarkup, because pattern clipPath has been applied in pattern's svg, and objectMarkup is not needed anymore
+    if (!this.clipPathPattern) {
+      markup.push(objectMarkup.join(''));
+    }
     markup.push('</g>\n');
     absoluteClipPath && markup.push('</g>\n');
     return reviver ? reviver(markup.join('')) : markup.join('');
