@@ -6,13 +6,8 @@ import { JUSTIFY } from './Text/constants';
 import type { TextStyleDeclaration } from './Text/StyledText';
 import type { SerializedITextProps, ITextProps } from './IText/IText';
 import type { ITextEvents } from './IText/ITextBehavior';
-import type {
-  FabricText,
-  SerializedTextProps,
-  TextLinesInfo,
-} from './Text/Text';
+import type { TextLinesInfo } from './Text/Text';
 import type { Control } from '../controls/Control';
-import { stylesFromArray } from '../util';
 import type { CSSRules } from '../parser/typedefs';
 import { parseAttributes } from '../parser/parseAttributes';
 import { Path } from './Path';
@@ -887,7 +882,7 @@ export class Textbox<
 
             lines.forEach((v, idx) => {
               minLeft = Math.min(minLeft, v.left);
-              v.width = (new Textbox(v.text, options) as any).calcTextWidth();
+              v.width = new Textbox(v.text, options).calcTextWidth();
               v.right = v.left + (v.width || 0);
               maxRight = Math.max(maxRight, v.right);
               maxWidth = Math.max(maxWidth, v.width || 0);

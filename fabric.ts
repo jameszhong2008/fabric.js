@@ -188,3 +188,6 @@ export { Control } from './src/controls/Control';
 export * as controlsUtils from './src/controls';
 
 export * from './src/filters';
+
+export * from './src/parser/typedefs';
+export * from './src/shapes/Object/defaultValues';
