@@ -11,6 +11,9 @@ import { Rect } from './Rect';
 import { FabricObject } from './Object/FabricObject';
 import { FabricImage } from './Image';
 import { SignalAbortedError } from '../util/internals/console';
+import { calcPlaneChangeMatrix } from '../util/misc/planeChange';
+import { matrixToSVG } from '../util/misc/svgExport';
+import { ActiveSelection } from './ActiveSelection';
 
 import { describe, expect, it, test, vi } from 'vitest';
 
@@ -80,6 +83,43 @@ describe('Group', () => {
         `fabric: loadImage 'options.signal' is in 'aborted' state`,
       );
     });
+  });
+
+  it('导出 SVG 时会补上组内多选对象的活动选择平面变换', () => {
+    const object = new Rect({
+      width: 40,
+      height: 20,
+      left: 120,
+      top: 80,
+      angle: 15,
+      strokeWidth: 0,
+    });
+    const sibling = new Rect({
+      width: 10,
+      height: 10,
+      left: 10,
+      top: 10,
+      strokeWidth: 0,
+    });
+    const canvas = new Canvas();
+    const group = new Group([object, sibling], {
+      left: 300,
+      top: 200,
+      angle: 25,
+      strokeWidth: 0,
+    });
+    canvas.add(group);
+    const activeSelection = new ActiveSelection([object], { canvas });
+
+    const planeChangeMatrix = calcPlaneChangeMatrix(
+      activeSelection.calcTransformMatrix(),
+      group.calcTransformMatrix(),
+    );
+    const svg = group.toSVG();
+
+    expect(object.group).toBe(activeSelection);
+    expect(object.parent).toBe(group);
+    expect(svg).toContain(`<g transform="${matrixToSVG(planeChangeMatrix)}">`);
   });
 
   describe('With fit-content layout manager', () => {

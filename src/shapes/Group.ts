@@ -14,7 +14,9 @@ import {
   enlivenObjectEnlivables,
   enlivenObjects,
 } from '../util/misc/objectEnlive';
+import { calcPlaneChangeMatrix } from '../util/misc/planeChange';
 import { applyTransformToObject } from '../util/misc/objectTransforms';
+import { matrixToSVG } from '../util/misc/svgExport';
 import { FabricObject } from './Object/FabricObject';
 import { Rect } from './Rect';
 import { classRegistry } from '../ClassRegistry';
@@ -640,9 +642,26 @@ export class Group
   _toSVG(reviver?: TSVGReviver) {
     const svgString = ['<g ', 'COMMON_PARTS', ' >\n'];
     const bg = this._createSVGBgRect(reviver);
+    const groupTransformMatrix = this.calcTransformMatrix();
     bg && svgString.push('\t\t', bg);
     for (let i = 0; i < this._objects.length; i++) {
-      svgString.push('\t\t', this._objects[i].toSVG(reviver));
+      const object = this._objects[i];
+      if (object.group && object.group !== this) {
+        // 组内对象被 ActiveSelection 临时接管时，需要补回当前组坐标系的变换。
+        const planeChangeMatrix = calcPlaneChangeMatrix(
+          object.group.calcTransformMatrix(),
+          groupTransformMatrix,
+        );
+        svgString.push(
+          '\t\t<g transform="',
+          matrixToSVG(planeChangeMatrix),
+          '">\n\t\t',
+          object.toSVG(reviver),
+          '\t\t</g>\n',
+        );
+        continue;
+      }
+      svgString.push('\t\t', object.toSVG(reviver));
     }
     svgString.push('</g>\n');
     return svgString;
