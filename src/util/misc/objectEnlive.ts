@@ -10,7 +10,7 @@ import { createImage } from './dom';
 import { classRegistry } from '../../ClassRegistry';
 import type { BaseFilter } from '../../filters/BaseFilter';
 import type { FabricObject as BaseFabricObject } from '../../shapes/Object/Object';
-import { FabricError, SignalAbortedError } from '../internals/console';
+import { FabricError, SignalAbortedError, log } from '../internals/console';
 import type { Shadow } from '../../Shadow';
 
 export type LoadImageOptions = Abortable & {
@@ -18,6 +18,12 @@ export type LoadImageOptions = Abortable & {
    * cors value for the image loading, default to anonymous
    */
   crossOrigin?: TCrossOrigin;
+
+  /**
+   * Resolve with an empty image instead of rejecting when the image fails to load.
+   * Useful for deserialization flows where one bad asset should not fail the entire document.
+   */
+  fallbackToEmptyImage?: boolean;
 };
 
 /**
@@ -28,7 +34,11 @@ export type LoadImageOptions = Abortable & {
  */
 export const loadImage = (
   url: string,
-  { signal, crossOrigin = null }: LoadImageOptions = {},
+  {
+    signal,
+    crossOrigin = null,
+    fallbackToEmptyImage = false,
+  }: LoadImageOptions = {},
 ) =>
   new Promise<HTMLImageElement>(function (resolve, reject) {
     if (signal && signal.aborted) {
@@ -43,9 +53,12 @@ export const loadImage = (
       };
       signal.addEventListener('abort', abort, { once: true });
     }
-    const done = function () {
+    const cleanup = function () {
       img.onload = img.onerror = null;
       abort && signal?.removeEventListener('abort', abort);
+    };
+    const done = function () {
+      cleanup();
       resolve(img);
     };
     if (!url) {
@@ -54,8 +67,19 @@ export const loadImage = (
     }
     img.onload = done;
     img.onerror = function () {
-      abort && signal?.removeEventListener('abort', abort);
-      reject(new FabricError(`Error loading ${img.src}`));
+      const failedSrc = img.src;
+      cleanup();
+      if (fallbackToEmptyImage) {
+        log(
+          'warn',
+          'Image failed to load, continuing with an empty image source',
+          failedSrc,
+        );
+        img.src = '';
+        resolve(img);
+        return;
+      }
+      reject(new FabricError(`Error loading ${failedSrc}`));
     };
     crossOrigin && (img.crossOrigin = crossOrigin);
     img.src = url;

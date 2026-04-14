@@ -1,9 +1,11 @@
-import { enlivenObjects } from './objectEnlive';
+import * as dom from './dom';
+import { enlivenObjects, loadImage } from './objectEnlive';
 import { Rect, type RectProps } from '../../shapes/Rect';
 import { Shadow } from '../../Shadow';
 import { classRegistry } from '../../ClassRegistry';
+import { FabricError } from '../internals/console';
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const mockedRectWithCustomProperty = {
   type: 'rect',
@@ -66,5 +68,50 @@ describe('enlivenObjects', () => {
       value: 3,
     });
     expect(rect.custom3).toBeInstanceOf(Test);
+  });
+});
+
+const createMockImage = () => {
+  let currentSrc = '';
+  return {
+    onload: null as null | (() => void),
+    onerror: null as null | (() => void),
+    crossOrigin: null as string | null,
+    complete: false,
+    naturalWidth: 0,
+    naturalHeight: 0,
+    get src() {
+      return currentSrc;
+    },
+    set src(value: string) {
+      currentSrc = value;
+      if (value === 'bad-url') {
+        queueMicrotask(() => this.onerror?.());
+      }
+    },
+  } as unknown as HTMLImageElement;
+};
+
+describe('loadImage', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('rejects loading errors by default', async () => {
+    vi.spyOn(dom, 'createImage').mockReturnValue(createMockImage());
+
+    await expect(loadImage('bad-url')).rejects.toEqual(
+      new FabricError('Error loading bad-url'),
+    );
+  });
+
+  it('falls back to an empty image when requested', async () => {
+    const mockImage = createMockImage();
+    vi.spyOn(dom, 'createImage').mockReturnValue(mockImage);
+
+    const image = await loadImage('bad-url', { fallbackToEmptyImage: true });
+
+    expect(image).toBe(mockImage);
+    expect(image.src).toBe('');
   });
 });

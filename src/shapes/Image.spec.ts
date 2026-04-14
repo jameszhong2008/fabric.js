@@ -2,11 +2,14 @@ import { FabricImage } from './Image';
 import { Shadow } from '../Shadow';
 import { Brightness } from '../filters/Brightness';
 import { loadSVGFromString } from '../parser/loadSVGFromString';
+import * as objectEnlive from '../util/misc/objectEnlive';
 
 const mockImage = new Image(100, 100);
 
-vi.mock('../util/misc/objectEnlive', () => {
-  const all = vi.importActual('../util/misc/objectEnlive');
+vi.mock('../util/misc/objectEnlive', async () => {
+  const all = await vi.importActual<typeof import('../util/misc/objectEnlive')>(
+    '../util/misc/objectEnlive',
+  );
   return {
     ...all,
     loadImage: vi.fn(async (src) => {
@@ -28,6 +31,22 @@ vi.mock('../filters/FilterBackend', () => ({
 }));
 
 describe('FabricImage', () => {
+  test('fromObject requests empty-image fallback for deserialization', async () => {
+    const image = await FabricImage.fromObject({
+      type: 'image',
+      src: 'broken-image-url',
+      crossOrigin: null,
+      cropX: 0,
+      cropY: 0,
+    } as any);
+
+    expect(image).toBeInstanceOf(FabricImage);
+    expect(objectEnlive.loadImage).toHaveBeenCalledWith('broken-image-url', {
+      crossOrigin: null,
+      fallbackToEmptyImage: true,
+    });
+  });
+
   describe('Svg export', () => {
     test('It exports an svg with styles for an image with stroke', () => {
       const imgElement = new Image(200, 200);

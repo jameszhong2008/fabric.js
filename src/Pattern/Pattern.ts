@@ -208,9 +208,11 @@ export class Pattern {
     }: SerializedPatternOptions,
     options?: Abortable,
   ): Promise<Pattern> {
+    const { crossOrigin } = otherOptions;
     const img = await loadImage(source, {
       ...options,
-      crossOrigin: otherOptions.crossOrigin,
+      crossOrigin,
+      fallbackToEmptyImage: true,
     });
     return new this({
       ...otherOptions,

@@ -799,21 +799,33 @@ export class FabricImage<
     options?: Abortable,
   ) {
     return Promise.all([
-      loadImage(src!, { ...options, crossOrigin }),
+      loadImage(src!, {
+        ...options,
+        crossOrigin,
+        fallbackToEmptyImage: true,
+      }),
       f && enlivenObjects<BaseFilter<string>>(f, options),
       // TODO: redundant - handled by enlivenObjectEnlivables
-      rf && enlivenObjects<BaseFilter<'Resize'>>([rf], options),
+      rf && enlivenObjects<Resize>([rf], options),
       enlivenObjectEnlivables(object, options),
-    ]).then(([el, filters = [], [resizeFilter] = [], hydratedProps = {}]) => {
-      return new this(el, {
-        ...object,
-        // TODO: this creates a difference between image creation and restoring from JSON
-        src,
-        filters,
-        resizeFilter,
-        ...hydratedProps,
-      });
-    });
+    ]).then(
+      ([el, filters = [], resizeFilters = [], hydratedProps = {}]: [
+        HTMLImageElement,
+        BaseFilter<string, Record<string, any>>[]?,
+        Resize[]?,
+        Record<string, any>?,
+      ]) => {
+        const [resizeFilter] = resizeFilters;
+        return new this(el, {
+          ...object,
+          // TODO: this creates a difference between image creation and restoring from JSON
+          src,
+          filters,
+          resizeFilter,
+          ...hydratedProps,
+        });
+      },
+    );
   }
 
   /**
