@@ -1,4 +1,5 @@
 import { FabricText } from './Text';
+import { Shadow } from '../../Shadow';
 
 import { describe, expect, it } from 'vitest';
 
@@ -27,5 +28,20 @@ describe('TextSvgExport', () => {
       true,
     );
     expect(svgStyles.includes('stroke="none"')).toBe(false);
+  });
+
+  it('exports shadowed text without duplicating text markup', () => {
+    const myText = new FabricText('text', {
+      shadow: new Shadow({
+        color: 'rgba(0, 0, 0, 0.4)',
+        blur: 6,
+        offsetX: 4,
+        offsetY: 4,
+      }),
+    });
+    const svgString = myText.toSVG();
+    expect((svgString.match(/<text /g) || []).length).toBe(1);
+    expect(svgString.includes('filter: url(#SVGID_')).toBe(true);
+    expect(svgString.includes('<filter id="SVGID_')).toBe(true);
   });
 });

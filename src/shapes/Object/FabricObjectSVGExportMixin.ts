@@ -304,7 +304,12 @@ export class FabricObjectSVGExportMixin {
     ].join('');
 
     // James added shadow 放在上面
+    // 文本等调用方已经通过 withShadow 挂载 filter 时，避免再额外复制一份可见对象，
+    // 但仍然需要输出 filter 定义，否则普通 SVG 会丢失阴影。
     if (shadow) {
+      markup.push(shadow.toSVG(this));
+    }
+    if (shadow && !withShadow) {
       const styleInfoWithShadow = 'style="' + this.getSvgStyles(false) + '" ';
       const commonPiecesWithShadow = [
         styleInfoWithShadow,
@@ -317,7 +322,6 @@ export class FabricObjectSVGExportMixin {
       objectMarkupCopy[index] = commonPiecesWithShadow;
 
       markup.push(objectMarkupCopy.join(''));
-      markup.push(shadow.toSVG(this));
     }
     // objectMarkup中是导出主对象(如path)的svg，index下标是style，放在commonPieces
     objectMarkup[index] = commonPieces;
