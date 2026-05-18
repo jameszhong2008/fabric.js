@@ -1083,22 +1083,28 @@ export class StaticCanvas<
    */
   _createPathForText() {
     const pathMarkups: string[] = [];
-    let instance,
-      i,
-      len,
-      objects = this._objects;
-    for (i = 0, len = objects.length; i < len; i++) {
-      instance = objects[i];
+    const objects: FabricObject[] = [];
+
+    this._objects.forEach(function add(object) {
+      objects.push(object);
+      if (isCollection(object)) {
+        object._objects.forEach(add);
+      }
+    });
+
+    objects.forEach((instance) => {
       if (instance.excludeFromExport) {
-        continue;
+        return;
       }
 
       if (!isTextObject(instance) || !instance.path) {
-        continue;
+        return;
       }
-      let pathId = `TEXTPATH_${(instance as any).id}`;
-      let pathMarkup = instance.path._toSVG();
-      let index = pathMarkup.indexOf('COMMON_PARTS');
+
+      const pathId = `TEXTPATH_${(instance as any).id}`;
+      const pathMarkup = instance.path._toSVG();
+      const index = pathMarkup.indexOf('COMMON_PARTS');
+
       // 加上id, 和路径偏移
       pathMarkup[index] = [
         'id="' + pathId + '" ',
@@ -1109,7 +1115,8 @@ export class StaticCanvas<
           ')" ',
       ].join('');
       pathMarkups.push(pathMarkup.join(''));
-    }
+    });
+
     return pathMarkups.join('\n');
   }
 

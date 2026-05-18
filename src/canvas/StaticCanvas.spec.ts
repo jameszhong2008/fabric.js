@@ -1,4 +1,7 @@
 import { StaticCanvas } from './StaticCanvas';
+import { Group } from '../shapes/Group';
+import { Path } from '../shapes/Path';
+import { FabricText } from '../shapes/Text/Text';
 
 import { it, expect, describe } from 'vitest';
 
@@ -23,5 +26,25 @@ describe('StaticCanvas', () => {
      * @see https://github.com/Automattic/node-canvas/issues/1258 for possible workaround
      */
     expect(dataURL).toMatch(/^data:image\/(webp|png)/);
+  });
+
+  it('exports text on path inside group to svg defs', () => {
+    const canvas = new StaticCanvas(undefined, { width: 300, height: 300 });
+    const textPath = new FabricText('Text On Path', {
+      id: 'group-text-path',
+      path: new Path('M 0 0 L 120 0'),
+      fontSize: 20,
+    });
+    const group = new Group([textPath], {
+      left: 40,
+      top: 60,
+    });
+
+    canvas.add(group);
+
+    const svg = canvas.toSVG();
+
+    expect(svg).toContain('<textPath href="#TEXTPATH_group-text-path" ');
+    expect(svg).toContain('id="TEXTPATH_group-text-path"');
   });
 });
